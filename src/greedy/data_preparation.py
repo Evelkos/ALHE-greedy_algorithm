@@ -1,10 +1,6 @@
 from typing import Any, List
 
-import numpy as np
-import pandas as pd
-
 from greedy.author import Author
-from greedy.publication import Publication
 from greedy.settings import (
     AUTHOR_ID,
     CONTRIBUTION,
@@ -18,24 +14,13 @@ from greedy.settings import (
 )
 
 
-def prepare_publications_dictionary(publications: List[str], monograph: List[int]):
-    assert len(publications) == len(monograph)
-    return {
-        idx: {
-            "id": publications[idx],
-            "is_monograph": True if monograph[idx] == 1 else False,
-        }
-        for idx in range(len(publications))
-    }
-
-
 def prepare_authors(
     authors: List[str],
     employees: List[int],
     phd_students: List[int],
     contribution: List[float],
     is_in_n: List[int],
-) -> pd.DataFrame:
+) -> List[Author]:
     result = []
     for author, is_emp, is_phd, cont, in_n in zip(
         authors, employees, phd_students, contribution, is_in_n

@@ -1,6 +1,6 @@
 test:
-	python -mpytest -q greedy
+	python -mpytest -q src
 
 fmt:
-	isort -rc --atomic greedy
-	black greedy
+	isort -rc --atomic src
+	black src

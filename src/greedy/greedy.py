@@ -1,8 +1,5 @@
 from greedy.data_loader import load_data
-from greedy.data_preparation import (
-    prepare_authors_and_publications,
-    sort_authors,
-)
+from greedy.data_preparation import prepare_authors_and_publications, sort_authors
 from greedy.settings import (
     DIGITAL_VARIABLES,
     FILEPATH,
@@ -30,4 +27,4 @@ def run_algorithm():
         STRING_LIST_VARIIABLES,
     )
     authors = sort_authors(prepare_authors_and_publications(data))
-    print(count_approximated_pubs_rate(authors))
+    approximated_pubs_rate = count_approximated_pubs_rate(authors)

@@ -14,6 +14,12 @@ from greedy.settings import (
 )
 
 
+def count_author_rate(author):
+    points = author.get_sum_of_publications_to_considerate()
+    num = author.get_number_of_publications_to_considerate()
+    return points / num
+
+
 def prepare_authors(
     authors: List[str],
     employees: List[int],
@@ -25,8 +31,8 @@ def prepare_authors(
     for author, is_emp, is_phd, cont, in_n in zip(
         authors, employees, phd_students, contribution, is_in_n
     ):
-        is_emp = False if 0 else True
-        is_phd = False if 0 else True
+        is_emp = False if is_emp == 0 else True
+        is_phd = False if is_phd == 0 else True
         author = Author(author, is_emp, is_phd, cont, in_n)
         result.append(author)
 
@@ -47,7 +53,7 @@ def prepare_publications(
         author.create_publications_ranking()
 
 
-def prepare_authors_and_publications(data):
+def prepare_authors_and_their_publications(data):
     authors = prepare_authors(
         data[AUTHOR_ID],
         data[IS_EMPLOYEE],
@@ -66,5 +72,11 @@ def prepare_authors_and_publications(data):
     return authors
 
 
+def set_rate_for_authors(authors):
+    for auth in authors:
+        auth.set_rate(count_author_rate(auth))
+
+
 def sort_authors(authors: List[Author]):
+    set_rate_for_authors(authors)
     return sorted(authors, key=lambda author: author.get_rate(), reverse=True)

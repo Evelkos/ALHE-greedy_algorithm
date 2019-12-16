@@ -11,17 +11,18 @@ PUBLICATIONS_COEFFICIENT_FOR_PHD = 2
 
 class Author:
     def __init__(
-        self, author_id: str, is_employee: bool, is_phd: bool, contrib: float, czyn: int
+        self, author_id: str, is_emp: bool, is_phd: bool, contrib: float, czyn: int
     ):
         self.id = author_id
         self.is_phd = is_phd
-        self.is_employee = is_employee
+        self.is_emp = is_emp
         self.czyn = czyn
         self.contribution = self.__update_contribution(contrib)
 
         self.publications = None
         self.to_considerate = None
         self.rate = None
+        self.__publications_to_considerate_sum = None
 
     def __str__(self):
         return f"{self.id}"
@@ -32,9 +33,9 @@ class Author:
         tmp_contrib_monograph_sum: float,
         is_monograph: bool,
     ) -> bool:
-        if self.is_employee and not self.__check_publications_limit(tmp_contrib_sum):
+        if self.is_emp and not self.__check_publications_limit(tmp_contrib_sum):
             return False
-        if self.is_employee and not self.__check_moographs_limit(
+        if self.is_emp and not self.__check_moographs_limit(
             tmp_contrib_monograph_sum, is_monograph
         ):
             return False
@@ -71,8 +72,9 @@ class Author:
 
         for pub in rated_pubs:
             pub_contrib = pub.get_contribution()
-            is_mono = pub.get_is_monograph()
+            is_mono = pub.is_monograph()
             tmp_contrib_sum = contrib_sum + pub_contrib
+            tmp_contrib_mono_sum = 0
             if is_mono:
                 tmp_contrib_mono_sum = contrib_monograph_sum + pub_contrib
             if self.__check_limits(tmp_contrib_sum, tmp_contrib_mono_sum, is_mono):
@@ -81,12 +83,6 @@ class Author:
                 contrib_monograph_sum = tmp_contrib_mono_sum
 
         return best_publications
-
-    def __count_rate(self):
-        rate = 0
-        for pub in self.to_considerate:
-            rate += pub.get_rate()
-        return rate
 
     def __get_sorted_publications(self):
         return sorted(self.publications, key=lambda pub: pub.get_rate(), reverse=True)
@@ -111,6 +107,9 @@ class Author:
 
         return self.to_considerate
 
+    def get_contribution(self):
+        return self.contribution
+
     def get_publications(self):
         if self.publications is None:
             raise AttributeError(
@@ -118,10 +117,33 @@ class Author:
             )
         return self.publications
 
+    def get_publications_to_considerate(self):
+        return self.to_considerate
+
+    def get_number_of_publications_to_considerate(self):
+        return len(self.to_considerate)
+
+    def get_sum_of_publications_to_considerate(self):
+        if self.__publications_to_considerate_sum is None:
+            pub_sum = 0
+            for pub in self.to_considerate:
+                pub_sum += pub.get_rate()
+            self.__publications_to_considerate_sum = pub_sum
+        return self.__publications_to_considerate_sum
+
+    def get_average_pub_points(self):
+        return self.get_sum_of_publications_to_considerate() / len(self.to_considerate)
+
     def get_rate(self):
         if self.rate is None:
-            self.rate = self.__count_rate()
+            raise AttributeError("Rate not set. Use set_rate() first")
         return self.rate
+
+    def is_phd_student(self):
+        return self.is_phd
+
+    def is_employee(self):
+        return self.is_emp
 
     def load_publications(
         self,
@@ -137,8 +159,11 @@ class Author:
             publications, monograph, pub_points, contribution
         ):
             if points > 0 and contrib > 0:
-                is_mon = False if 0 else True
+                is_mon = False if is_mon == 0 else True
                 result.append(Publication(pub_id, is_mon, points, contrib))
 
         self.publications = result
         return self.publications
+
+    def set_rate(self, new_rate: float):
+        self.rate = new_rate

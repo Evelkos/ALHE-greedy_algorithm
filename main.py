@@ -1,5 +1,5 @@
-from greedy.greedy import run_algorithm
-from greedy.settings import FILEPATH
+from src.greedy.greedy import run_algorithm
+from src.greedy.settings import FILEPATH
 from os.path import isfile
 
 if __name__ == "__main__":

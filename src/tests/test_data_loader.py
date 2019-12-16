@@ -40,13 +40,13 @@ def test_find_data_segment_with_list_of_strings_pattern_with_multiple_variables(
 
 
 def test_find_data_segment_with_nested_list_pattern():
-    data = 'Z = [[1, 1, 0], [0, 0, 1]];'
+    data = "Z = [[1, 1, 0], [0, 0, 1]];"
     pattern = get_nested_list_pattern()
     assert find_data_segment(data, "Z", pattern) == "[[1, 1, 0], [0, 0, 1]]"
 
 
 def test_find_data_segment_with_nested_list_pattern_and_multiple_variables():
-    data = 'A = [3]; X = [[0, 1, 0], [0, 0, 1]];'
+    data = "A = [3]; X = [[0, 1, 0], [0, 0, 1]];"
     pattern = get_nested_list_pattern()
     assert find_data_segment(data, "X", pattern) == "[[0, 1, 0], [0, 0, 1]]"
 
@@ -68,7 +68,7 @@ def test_extract_vars_with_list_of_strings_pattern():
 
 
 def test_extract_vars_with_nested_list_pattern():
-    data = 'G = [[1], [2]];'
+    data = "G = [[1], [2]];"
     pattern = get_nested_list_pattern()
     assert extract_vars(data, ["G"], pattern) == {"G": [[1], [2]]}
 
@@ -100,5 +100,5 @@ def test_load_data_with_string_list_variable():
 
 
 def test_load_data_with_multiple_variables():
-    data = 'A = 3; B = [0.5, 1.0, 1.0];'
+    data = "A = 3; B = [0.5, 1.0, 1.0];"
     assert load_data(data, ["A"], ["B"]) == {"A": 3, "B": [0.5, 1.0, 1.0]}

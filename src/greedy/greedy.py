@@ -1,6 +1,9 @@
-from greedy.data_loader import load_data
-from greedy.data_preparation import prepare_authors_and_their_publications, sort_authors
-from greedy.settings import (
+from src.greedy.data_loader import load_data
+from src.greedy.data_preparation import (
+    prepare_authors_and_their_publications,
+    sort_authors,
+)
+from src.greedy.settings import (
     DIGITAL_VARIABLES,
     EMPLOYEES_NUM,
     FILEPATH,

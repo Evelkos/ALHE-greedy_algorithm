@@ -1,7 +1,7 @@
 from typing import Any, List
 
-from greedy.author import Author
-from greedy.settings import (
+from src.greedy.author import Author
+from src.greedy.settings import (
     AUTHOR_ID,
     CONTRIBUTION,
     IS_EMPLOYEE,

@@ -1,6 +1,6 @@
 from typing import Any, List
 
-from greedy.publication import Publication
+from src.greedy.publication import Publication
 
 PUBLICATIONS_COEFFICIENT = 4
 MONOGRAPH_COEFFICIENT = 2
@@ -28,17 +28,13 @@ class Author:
         return f"{self.id}"
 
     def __check_limits(
-        self,
-        tmp_contrib_sum: float,
-        tmp_contrib_monograph_sum: float,
-        is_monograph: bool,
+        self, tmp_contrib_sum: float, tmp_contrib_mono_sum: float, is_mono: bool
     ) -> bool:
-        if self.is_emp and not self.__check_publications_limit(tmp_contrib_sum):
-            return False
-        if self.is_emp and not self.__check_moographs_limit(
-            tmp_contrib_monograph_sum, is_monograph
-        ):
-            return False
+        if self.is_emp:
+            if not self.__check_publications_limit(tmp_contrib_sum):
+                return False
+            if not self.__check_moographs_limit(tmp_contrib_mono_sum, is_mono):
+                return False
         if not self.__check_limits_for_phd_students(tmp_contrib_sum):
             return False
         return True

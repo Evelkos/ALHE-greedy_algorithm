@@ -3,9 +3,9 @@ from typing import Any, List
 import numpy as np
 import pandas as pd
 
-from implementation.author import Author
-from implementation.publication import Publication
-from implementation.settings import (
+from greedy.author import Author
+from greedy.publication import Publication
+from greedy.settings import (
     AUTHOR_ID,
     CONTRIBUTION,
     IS_EMPLOYEE,

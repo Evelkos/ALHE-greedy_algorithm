@@ -1,9 +1,9 @@
-from implementation.data_loader import load_data
-from implementation.data_preparation import (
+from greedy.data_loader import load_data
+from greedy.data_preparation import (
     prepare_authors_and_publications,
     sort_authors,
 )
-from implementation.settings import (
+from greedy.settings import (
     DIGITAL_VARIABLES,
     FILEPATH,
     HEURISTIC_AUTHORS_LIST_LEN,

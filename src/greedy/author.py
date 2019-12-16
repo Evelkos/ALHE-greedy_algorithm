@@ -1,6 +1,6 @@
 from typing import Any, List
 
-from implementation.publication import Publication
+from greedy.publication import Publication
 
 PUBLICATIONS_COEFFICIENT = 4
 MONOGRAPH_COEFFICIENT = 2

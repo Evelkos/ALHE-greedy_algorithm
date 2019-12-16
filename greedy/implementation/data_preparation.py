@@ -8,8 +8,8 @@ from implementation.publication import Publication
 from implementation.settings import (
     AUTHOR_ID,
     CONTRIBUTION,
-    CZYN,
     IS_EMPLOYEE,
+    IS_IN_N,
     IS_MONOGRAPH,
     IS_PHD_STUDENT,
     PUBLICATION_CONTRIB_FOR_AUTHOR,
@@ -34,22 +34,19 @@ def prepare_authors(
     employees: List[int],
     phd_students: List[int],
     contribution: List[float],
-    czyn: List[int],
+    is_in_n: List[int],
 ) -> pd.DataFrame:
     result = []
-    for author, is_emp, is_phd, cont, cz in zip(
-        authors,
-        employees,
-        phd_students,
-        contribution,
-        czyn,
+    for author, is_emp, is_phd, cont, in_n in zip(
+        authors, employees, phd_students, contribution, is_in_n
     ):
         is_emp = False if 0 else True
         is_phd = False if 0 else True
-        author = Author(author, is_emp, is_phd, cont, cz)
+        author = Author(author, is_emp, is_phd, cont, in_n)
         result.append(author)
 
     return result
+
 
 def prepare_publications(
     authors: List[Author],
@@ -57,20 +54,32 @@ def prepare_publications(
     monographs: List[int],
     publications_points: List[float],
     publications_contributions: List[Any],
-    ) -> None:
-    for author, points, contrib in zip(authors, publications_points, publications_contributions):
+) -> None:
+    for author, points, contrib in zip(
+        authors, publications_points, publications_contributions
+    ):
         author.load_publications(publications, monographs, points, contrib)
         author.create_publications_ranking()
 
 
-def run_greedy(data):
+def prepare_authors_and_publications(data):
     authors = prepare_authors(
         data[AUTHOR_ID],
         data[IS_EMPLOYEE],
         data[IS_PHD_STUDENT],
         data[CONTRIBUTION],
-        data[CZYN],
+        data[IS_IN_N],
     )
-    prepare_publications(authors, data[PUBLICATION_ID], data[IS_MONOGRAPH], data[PUBLICATION_POINTS_FOR_AUTHOR], data[PUBLICATION_CONTRIB_FOR_AUTHOR])
+    prepare_publications(
+        authors,
+        data[PUBLICATION_ID],
+        data[IS_MONOGRAPH],
+        data[PUBLICATION_POINTS_FOR_AUTHOR],
+        data[PUBLICATION_CONTRIB_FOR_AUTHOR],
+    )
 
-    return 0
+    return authors
+
+
+def sort_authors(authors: List[Author]):
+    return sorted(authors, key=lambda author: author.get_rate(), reverse=True)

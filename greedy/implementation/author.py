@@ -1,4 +1,5 @@
 from typing import Any, List
+
 from implementation.publication import Publication
 
 PUBLICATIONS_COEFFICIENT = 4
@@ -20,18 +21,10 @@ class Author:
 
         self.publications = None
         self.to_considerate = None
-        self.rating = None
+        self.rate = None
 
     def __str__(self):
         return f"{self.id}"
-
-    def __count_pub_value(self, publication: int):
-        """
-            heuristic
-        """
-        points = self.publications[publication]["points"]
-        contrib = self.publications[publication]["contrib"]
-        return points / contrib
 
     def __check_limits(
         self,
@@ -89,9 +82,14 @@ class Author:
 
         return best_publications
 
+    def __count_rate(self):
+        rate = 0
+        for pub in self.to_considerate:
+            rate += pub.get_rate()
+        return rate
+
     def __get_sorted_publications(self):
         return sorted(self.publications, key=lambda pub: pub.get_rate(), reverse=True)
-
 
     def __update_contribution(self, contribution: float):
         # TODO - check first limit - how to count contribution
@@ -120,14 +118,27 @@ class Author:
             )
         return self.publications
 
-    def load_publications(self, publications: List[str], monograph: List[int], pub_points: List[float], contribution: List[float]):
+    def get_rate(self):
+        if self.rate is None:
+            self.rate = self.__count_rate()
+        return self.rate
+
+    def load_publications(
+        self,
+        publications: List[str],
+        monograph: List[int],
+        pub_points: List[float],
+        contribution: List[float],
+    ):
         assert len(publications) == len(monograph)
 
         result = []
-        for pub_id, is_mon, points, contrib in zip(publications, monograph, pub_points, contribution):
+        for pub_id, is_mon, points, contrib in zip(
+            publications, monograph, pub_points, contribution
+        ):
             if points > 0 and contrib > 0:
                 is_mon = False if 0 else True
                 result.append(Publication(pub_id, is_mon, points, contrib))
-        self.publications = result
 
+        self.publications = result
         return self.publications

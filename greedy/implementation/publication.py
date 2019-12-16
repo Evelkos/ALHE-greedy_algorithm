@@ -1,5 +1,11 @@
 class Publication:
-    def __init__(self, publication_id: str, is_monograph: bool, points: float, contribution: float):
+    def __init__(
+        self,
+        publication_id: str,
+        is_monograph: bool,
+        points: float,
+        contribution: float,
+    ):
         self.id = publication_id
         self.is_monograph = is_monograph
         self.points = points

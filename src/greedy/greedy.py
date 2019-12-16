@@ -147,9 +147,9 @@ def choose_final_publications(authors, data):
     return final_publications
 
 
-def run_algorithm():
+def run_algorithm(data_from_file: str):
     data = load_data(
-        FILEPATH,
+        data_from_file,
         DIGITAL_VARIABLES,
         LIST_VARIABLES,
         NESTED_LIST_VARIABLES,

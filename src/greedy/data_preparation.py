@@ -1,6 +1,7 @@
 from typing import Any, List
 
 from src.greedy.author import Author
+from src.greedy.publication import Publication
 from src.greedy.settings import (
     AUTHOR_ID,
     CONTRIBUTION,
@@ -39,6 +40,22 @@ def prepare_authors(
     return result
 
 
+def create_publications_list(
+    pubs: List[str], mons: List[int], points: List[float], contribs: List[float]
+):
+    assert len(pubs) == len(mons)
+    assert len(points) == len(contribs)
+    assert len(pubs) == len(contribs)
+
+    result = []
+    for pub_id, is_mon, pts, contrib in zip(pubs, mons, points, contribs):
+        if pts > 0 and contrib > 0:
+            is_mon = False if is_mon == 0 else True
+            result.append(Publication(pub_id, is_mon, pts, contrib))
+
+    return result
+
+
 def prepare_publications(
     authors: List[Author],
     publications: List[Any],
@@ -49,7 +66,8 @@ def prepare_publications(
     for author, points, contrib in zip(
         authors, publications_points, publications_contributions
     ):
-        author.load_publications(publications, monographs, points, contrib)
+        pubs = create_publications_list(publications, monographs, points, contrib)
+        author.load_publications(pubs)
         author.create_publications_ranking()
 
 

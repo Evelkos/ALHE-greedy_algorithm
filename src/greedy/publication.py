@@ -7,6 +7,9 @@ class Publication:
         self.points = points
         self.contribution = contribution
 
+    def __str__(self):
+        return f"{self.id} {self.is_mono} {self.points} {self.contribution} {self.get_rate()}"
+
     def is_monograph(self):
         return self.is_mono
 

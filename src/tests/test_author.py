@@ -9,6 +9,7 @@ from src.greedy.author import (
     PUBLICATIONS_COEFFICIENT_FOR_PHD,
     Author,
 )
+from src.greedy.check_limits import check_author_limits
 from src.greedy.publication import Publication
 
 IS_EMP = True
@@ -56,29 +57,65 @@ def prepare_basic_test_data():
 
 
 def prepare_complex_test_data():
-    author = create_example_author()
+    author = Author("author", True, False, 0.5, 1)
 
     pubs = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-    mons = [True, False, True, False, True, False, True, False, True, False]
+    mons = [True, True, True, False, True, False, False, False, True, True]
     points = [100.0, 10.0, 90.0, 20.0, 80.0, 30.0, 70.0, 40.0, 60.0, 50.0]
     contribs = [1.0, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0]
     publications = []
     for pub_id, is_mono, pts, contrib in zip(pubs, mons, points, contribs):
         publications.append(Publication(pub_id, is_mono, pts, contrib))
 
-    pubs_rates_sum = count_publications_rates_sum(publications)
+    author.load_publications(publications)
+    author.create_publications_ranking()
 
-    return author, publications, pubs_rates_sum
+    return author, publications
+
+
+def prepare_data_for_check_mono_limit_test():
+    """
+    Prepares data that fails _Author__check_moographs_limit() test
+
+    """
+    is_phd = False
+    is_emp = False
+    is_mon = True
+    tmp_sum = MONOGRAPH_COEFFICIENT * CONTRIB + 1.0
+    points = MONOGRAPH_LIMIT_MAX_POINTS / 2
+
+    author = Author(AUTH_ID, is_emp, is_phd, CONTRIB, CZYN)
+
+    return author, is_mon, tmp_sum, points
+
+
+def test_check_moographs_limit_with_data_prepared_for_test():
+    auth, is_mon, tmp_sum, points = prepare_data_for_check_mono_limit_test()
+    assert not auth._Author__check_moographs_limit(tmp_sum, is_mon, points)
 
 
 def test_check_moographs_limit_when_author_is_an_phd():
-    author = Author(AUTH_ID, IS_EMP, True, CONTRIB, CZYN)
+    auth, is_mon, tmp_sum, points = prepare_data_for_check_mono_limit_test()
+    auth.is_phd = True
+    assert auth._Author__check_moographs_limit(tmp_sum, is_mon, points)
 
 
-# def test_check_moographs_limit_with_valuable_monograph():
-#     author = create_example_author()
-#     pub = Publication("1", True, MONOGRAPH_LIMIT_MAX_POINTS + 10.0, 0.5),
-#     author._Author__check_moographs_limit()
+def test_check_moographs_limit_when_publication_is_not_a_monograph():
+    auth, is_mon, tmp_sum, points = prepare_data_for_check_mono_limit_test()
+    is_mon = False
+    assert auth._Author__check_moographs_limit(tmp_sum, is_mon, points)
+
+
+def test_check_moographs_limit_with_appropiate_tmp_contrib_monograph_sum():
+    auth, is_mon, tmp_sum, points = prepare_data_for_check_mono_limit_test()
+    tmp_sum = MONOGRAPH_COEFFICIENT * auth.get_contribution()
+    assert auth._Author__check_moographs_limit(tmp_sum, is_mon, points)
+
+
+def test_check_moographs_limit_with_valuable_monograph():
+    auth, is_mon, tmp_sum, points = prepare_data_for_check_mono_limit_test()
+    points = MONOGRAPH_LIMIT_MAX_POINTS + 0.1
+    assert auth._Author__check_moographs_limit(tmp_sum, is_mon, points)
 
 
 def test_check_publications_limit_with_standard_contributions_sum():
@@ -123,9 +160,14 @@ def test_check_limits_for_phd_students_when_author_is_not_phd():
     assert author._Author__check_limits_for_phd_students(value)
 
 
-# TODO
-# def test_choose_best_publications():
-#     author, publications, _ = prepare_complex_test_data()
+def test_choose_best_publications():
+    author, pubs = prepare_complex_test_data()
+    pubs = filter(lambda x: x.get_contribution() > 0 and x.get_points() > 0, pubs)
+    pubs = list(pubs)
+    pubs = sorted(pubs, key=lambda pub: pub.get_rate(), reverse=True)
+
+    result = author._Author__choose_best_publications(pubs)
+    check_author_limits(author, result)
 
 
 def test_get_sorted_publications():

@@ -7,7 +7,7 @@ MONOGRAPH_COEFFICIENT = 2
 MONOGRAPH_LIMIT_MAX_POINTS = 100.0
 MIN_CONTRIBUTION = 0.25
 MAX_CONTRIBUTION = 1
-PUBLICATIONS_COEFFICIENT_FOR_PHD = 2
+PUBLICATIONS_COEFFICIENT_FOR_PHD = 4
 
 
 class Author:
@@ -58,19 +58,19 @@ class Author:
         tmp_contrib_sum: float,
         tmp_contrib_mono_sum: float,
         is_mono: bool,
-        pub: Publication,
+        pts: float,
     ) -> bool:
         if self.is_emp:
             if not self.__check_publications_limit(tmp_contrib_sum):
                 return False
-            if not self.__check_moographs_limit(tmp_contrib_mono_sum, is_mono, pub):
+            if not self.__check_moographs_limit(tmp_contrib_mono_sum, is_mono, pts):
                 return False
         if not self.__check_limits_for_phd_students(tmp_contrib_sum):
             return False
         return True
 
     def __check_moographs_limit(
-        self, tmp_contrib_monograph_sum: float, is_monograph: bool, pub: Publication
+        self, tmp_contrib_monograph_sum: float, is_monograph: bool, points: float
     ) -> bool:
         if self.is_phd:
             return True
@@ -78,7 +78,7 @@ class Author:
             return True
         elif tmp_contrib_monograph_sum <= MONOGRAPH_COEFFICIENT * self.contribution:
             return True
-        elif pub.get_points() > MONOGRAPH_LIMIT_MAX_POINTS:
+        elif points > MONOGRAPH_LIMIT_MAX_POINTS:
             return True
         return False
 
@@ -100,14 +100,17 @@ class Author:
         for pub in rated_pubs:
             pub_contrib = pub.get_contribution()
             is_mono = pub.is_monograph()
-            tmp_contrib_sum = contrib_sum + pub_contrib
-            tmp_contrib_mono_sum = 0
+            pts = pub.get_points()
+
+            tmp_contr_sum = contrib_sum + pub_contrib
+            tmp_contr_mono_sum = contrib_monograph_sum
             if is_mono:
-                tmp_contrib_mono_sum = contrib_monograph_sum + pub_contrib
-            if self.__check_limits(tmp_contrib_sum, tmp_contrib_mono_sum, is_mono, pub):
+                tmp_contr_mono_sum += pub_contrib
+
+            if self.__check_limits(tmp_contr_sum, tmp_contr_mono_sum, is_mono, pts):
                 best_publications.append(pub)
-                contrib_sum = tmp_contrib_sum
-                contrib_monograph_sum = tmp_contrib_mono_sum
+                contrib_sum = tmp_contr_sum
+                contrib_monograph_sum = tmp_contr_mono_sum
 
         return best_publications
 

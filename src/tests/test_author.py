@@ -22,7 +22,7 @@ AUTH_ID = "WEITI-e85bc237-d711-46c7-b31e-e4c991c79392"
 def count_publications_rates_sum(publications):
     result = 0
     for pub in publications:
-        result += pub.get_rate()
+        result += pub.get_points()
     return result
 
 

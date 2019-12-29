@@ -16,31 +16,9 @@ from src.greedy.settings import (
     NESTED_LIST_VARIABLES,
     STRING_LIST_VARIIABLES,
 )
-
-
-def check_publications_number_limit(data, tmp_contrib_sum: float) -> bool:
-    return (
-        tmp_contrib_sum
-        < 3 * data[EMPLOYEES_NUM] - 3 * data[N0] - 6 * data[N1] - 6 * data[N2]
-    )
-
-
-def check_monographs_number_limit(data, tmp_monograpth_sum: float) -> bool:
-    return tmp_monograpth_sum < 0.15 * data[EMPLOYEES_NUM]
-
-
-def check_phd_students_and_outsiders(data, tmp_phd_and_outsiders) -> bool:
-    return tmp_phd_and_outsiders < 0.6 * data[EMPLOYEES_NUM]
-
-
-def check_limits(data, tmp_sums):
-    if not check_publications_number_limit(data, tmp_sums["contrib_sum"]):
-        return False
-    if not check_monographs_number_limit(data, tmp_sums["monograpth_sum"]):
-        return False
-    if not check_phd_students_and_outsiders(data, tmp_sums["phd_and_outsiders"]):
-        return False
-    return True
+from src.greedy.check_limits import check_limits, count_curr_sums_for_publications
+from typing import List
+from src.greedy.author import Author
 
 
 def count_approximated_pubs_rate(authors):
@@ -67,7 +45,7 @@ def consider_single_publication(auth, pub, curr_sums, data):
     return check_limits(data, tmp_sums)
 
 
-def get_pub_points_from_author_below(authors, idx):
+def get_points_from_auth_below(authors, idx):
     if len(authors) > HEURISTIC_AUTHORS_LIST_LEN + idx:
         return authors[HEURISTIC_AUTHORS_LIST_LEN + idx].get_average_pub_points()
     return 0
@@ -79,7 +57,7 @@ def update_current_sums(curr_sums, pub, auth):
 
     if pub.is_monograph():
         monograph_sum += pub.get_contribution()
-    if auth.is_phd_student() or not auth.is_employee():
+    if auth.is_phd_student() or not auth.is_in_n():
         phd_and_outsiders += pub.get_contribution()
 
     result = {
@@ -90,65 +68,27 @@ def update_current_sums(curr_sums, pub, auth):
     return result
 
 
-def choose_final_publications(authors, data):
+def choose_final_publications(authors: List[Author], data: dict):
     result = []
     curr_sums = {"contrib_sum": 0, "monograpth_sum": 0, "phd_and_outsiders": 0}
-
-    final_publications = []
-    current_contrib_sum = 0
-    goal_function = 0
     heuristic_function = count_approximated_pubs_rate(authors)
+    goal_function = 0
 
-    points = 0
-    all_authors_contrib_sum = 0
+    for idx, author in enumerate(authors, 0):
+        for pub in author.get_publications_to_considerate():
+            if consider_single_publication(author, pub, curr_sums, data):
+                heu_pub = heuristic_function - pub.get_points()
+                heu_without_pub = heu_pub + get_points_from_auth_below(authors, idx)
+                tmp_goal_function = goal_function + pub.get_points()
 
-    di = 0
-    for auth in authors:
-        di += auth.get_contribution()
-
-    i = 0
-    for idx, auth in enumerate(authors):
-        auth_contrib_sum = 0
-        for pub in auth.get_publications_to_considerate():
-            # Count tmp_goal_function
-            if consider_single_publication(auth, pub, curr_sums, data):
-                tmp_points = points + pub.get_points()
-                tmp_auth_contrib_sum = auth_contrib_sum + pub.get_contribution()
-                tmp_all_authors_contrib_sum = (
-                    all_authors_contrib_sum + pub.get_contribution()
-                )
-                pub_modif = 0
-                all_pub_modif = 0
-                if tmp_auth_contrib_sum - 4 * auth.get_contribution() > 0:
-                    pub_modif += -250 * pub.get_contribution()
-                if tmp_all_authors_contrib_sum - 3 * di > 0:
-                    all_pub_modif = -250 * pub.get_contribution()
-
-                tmp_goal_function = tmp_points + pub_modif + all_pub_modif
-
-                # Count tmp heuristic functions
-                heuristic_if_pub_added = heuristic_function - pub.get_points()
-                heuristic_if_pub_not_added = (
-                    heuristic_if_pub_added
-                    + get_pub_points_from_author_below(authors, idx)
-                )
-
-                # Update values
-                if (
-                    goal_function + heuristic_if_pub_not_added
-                    > tmp_goal_function + heuristic_if_pub_added
-                ):
-                    heuristic_function = heuristic_if_pub_not_added
+                if goal_function + heu_without_pub > tmp_goal_function + heu_pub:
+                    heuristic_function = heu_without_pub
                 else:
                     goal_function = tmp_goal_function
-                    points = tmp_points
-                    auth_contrib_sum = tmp_auth_contrib_sum
-                    all_authors_contrib_sum = tmp_all_authors_contrib_sum
-                    heuristic_function = heuristic_if_pub_added
-                    curr_sums = update_current_sums(curr_sums, pub, auth)
-
-                    final_publications.append(pub)
-    return final_publications
+                    heuristic_function = heu_pub
+                    curr_sums = update_current_sums(curr_sums, pub, author)
+                    result.append(pub)
+    return result
 
 
 def run_algorithm(data_from_file: str):
@@ -162,6 +102,6 @@ def run_algorithm(data_from_file: str):
     authors = prepare_authors_and_their_publications(data)
     set_rate_for_authors(authors)
     authors = sort_authors(authors)
-    approximated_pubs_rate = count_approximated_pubs_rate(authors)
     publications = choose_final_publications(authors, data)
-    print(publications)
+    assert check_limits(data, count_curr_sums_for_publications(publications))
+    return publications

@@ -1,11 +1,12 @@
 class Publication:
     def __init__(
-        self, publication_id: str, is_mono: bool, points: float, contribution: float
+        self, publication_id: str, is_mono: bool, points: float, contribution: float, author = None
     ):
         self.id = publication_id
         self.is_mono = is_mono
         self.points = points
         self.contribution = contribution
+        self.author = author
 
     def __str__(self):
         return f"{self.id} {self.is_mono} {self.points} {self.contribution} {self.get_rate()}"
@@ -21,6 +22,9 @@ class Publication:
     def is_monograph(self):
         return self.is_mono
 
+    def get_author(self):
+        return self.author
+
     def get_contribution(self):
         return self.contribution
 
@@ -32,3 +36,6 @@ class Publication:
 
     def get_rate(self):
         return self.points / self.contribution
+
+    def set_author(self, author):
+        self.author = author

@@ -142,7 +142,7 @@ class Author:
         self.__check_if_to_considerate_list_is_not_none()
         pub_sum = 0
         for pub in self.to_considerate:
-            pub_sum += pub.get_rate()
+            pub_sum += pub.get_points()
         return pub_sum
 
     def create_publications_ranking(self):
@@ -191,10 +191,14 @@ class Author:
     def is_employee(self):
         return self.is_emp
 
+    def is_in_n(self):
+        return self.in_n
+
     def load_publications(self, publications) -> None:
         result = []
         for pub in publications:
             if pub.get_points() > 0 and pub.get_contribution() > 0:
+                pub.set_author(self)
                 result.append(pub)
 
         self.publications = result

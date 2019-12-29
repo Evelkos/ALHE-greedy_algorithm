@@ -21,8 +21,8 @@ def check_publications_number_limit(data: dict, contrib_sum: float) -> bool:
     return contrib_sum < limit
 
 
-def check_monographs_number_limit(data: dict, monograpth_sum: float) -> bool:
-    return monograpth_sum < 0.15 * data[EMPLOYEES_NUM]
+def check_monographs_number_limit(data: dict, monograph_sum: float) -> bool:
+    return monograph_sum < 0.15 * data[EMPLOYEES_NUM]
 
 
 def check_phd_students_and_outsiders(data: dict, phd_and_outsiders: float) -> bool:
@@ -32,7 +32,7 @@ def check_phd_students_and_outsiders(data: dict, phd_and_outsiders: float) -> bo
 def check_limits(data: dict, current_sums: dict):
     if not check_publications_number_limit(data, current_sums["contrib_sum"]):
         return False
-    if not check_monographs_number_limit(data, current_sums["monograpth_sum"]):
+    if not check_monographs_number_limit(data, current_sums["monograph_sum"]):
         return False
     if not check_phd_students_and_outsiders(data, current_sums["phd_and_outsiders"]):
         return False
@@ -61,19 +61,19 @@ def check_author_limits(auth: Author, publications: List[Publication]):
 
 def count_curr_sums_for_publications(publications):
     contrib_sum = 0
-    monograpth_sum = 0
+    monograph_sum = 0
     phd_and_outsiders = 0
 
     for pub in publications:
         contrib_sum += pub.get_contribution()
         if pub.is_monograph():
-            monograpth_sum += pub.get_contribution()
+            monograph_sum += pub.get_contribution()
         if pub.get_author().is_phd_student() or not pub.get_author().is_employee():
             phd_and_outsiders += pub.get_contribution()
 
     curr_sums = {
         "contrib_sum": contrib_sum,
-        "monograpth_sum": monograpth_sum,
+        "monograph_sum": monograph_sum,
         "phd_and_outsiders": phd_and_outsiders
     }
     return curr_sums

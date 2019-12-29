@@ -8,6 +8,9 @@ from src.greedy.data_preparation import (
     normalize_data,
     prepare_authors,
     prepare_publications,
+    prepare_authors_and_their_publications,
+    set_rate_for_authors,
+    sort_authors,
 )
 from src.greedy.publication import Publication
 from src.greedy.settings import (
@@ -31,7 +34,6 @@ from typing import List
 
 
 def prepare_test_authors(data: dict):
-    data = prepare_test_authors_data()
     authors = []
     for idx in range(len(data[AUTHOR_ID])):
         a_id = data[AUTHOR_ID][idx]
@@ -103,8 +105,7 @@ def test_count_author_rate_with_zero_publications_to_considerate():
     author, _, _ = prepare_basic_test_data()
     author.to_considerate = []
 
-    with pytest.raises(ZeroDivisionError):
-        count_author_rate(author)
+    assert count_author_rate(author) == 0
 
 
 def test_prepare_authors():
@@ -144,5 +145,67 @@ def test_prepare_publications():
     assert authors == test_authors
 
 
-def test_prepare_authors_and_their_publications():
-    assert True
+def test_prepare_authors_and_their_publications_with_multiple_authors():
+    data = {
+        PUBLICATION_ID: ["0", "1", "2"],
+        IS_MONOGRAPH: [1, 1, 0],
+        PUBLICATION_POINTS_FOR_AUTHOR: [[0, 0, 1], [2, 0, 0], [0, 1, 0]],
+        PUBLICATION_CONTRIB_FOR_AUTHOR: [[0, 0, 1.0], [0.5, 0, 0], [0, 0, 0]],
+        AUTHOR_ID: ["a", "b", "c"],
+        IS_EMPLOYEE: [1, 1, 0],
+        IS_PHD_STUDENT: [0, 1, 1],
+        CONTRIBUTION: [1.0, 0.5, 1.0],
+        IS_IN_N: [1, 1, 1],
+    }
+
+    authors = prepare_authors_and_their_publications(data)
+
+    data = normalize_data(data)
+    test_authors = prepare_test_authors(data)
+
+    test_authors[0].publications = [Publication("2", False, 1, 1.0)]
+    test_authors[0].to_considerate = test_authors[0].publications
+    test_authors[1].publications = [Publication("0", True, 2, 0.5)]
+    test_authors[1].to_considerate = test_authors[1].publications
+    test_authors[2].publications = []
+    test_authors[2].to_considerate = []
+
+    assert authors == test_authors
+
+
+def test_prepare_authors_and_their_publications_with_one_pub_with_too_big_contrib():
+    data = {
+        PUBLICATION_ID: ["0", "1", "2"],
+        IS_MONOGRAPH: [1, 0, 0],
+        PUBLICATION_POINTS_FOR_AUTHOR: [[69, 0, 1]],
+        PUBLICATION_CONTRIB_FOR_AUTHOR: [[96.0, 0, 1.0]],
+        AUTHOR_ID: ["a"],
+        IS_EMPLOYEE: [1],
+        IS_PHD_STUDENT: [0],
+        CONTRIBUTION: [1.0],
+        IS_IN_N: [1],
+    }
+
+    authors = prepare_authors_and_their_publications(data)
+
+    data = normalize_data(data)
+    test_authors = prepare_test_authors(data)
+    test_publications = [
+        Publication("0", True, 69, 96.0),
+        Publication("2", False, 1, 1.0)
+    ]
+    test_authors[0].publications = test_publications
+    test_authors[0].to_considerate = [test_publications[1]]
+    
+    assert authors == test_authors
+
+
+def test_set_rate_for_authors():
+    authors = prepare_test_authors(prepare_test_authors_data())
+    for idx, author in enumerate(authors, 0):
+        author.set_rate(idx)
+
+    sorted_authors = sort_authors(authors)
+    authors.reverse()
+
+    assert sorted_authors == authors

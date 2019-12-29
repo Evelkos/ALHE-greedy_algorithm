@@ -2,6 +2,7 @@ from src.greedy.data_loader import load_data
 from src.greedy.data_preparation import (
     prepare_authors_and_their_publications,
     sort_authors,
+    set_rate_for_authors,
 )
 from src.greedy.settings import (
     DIGITAL_VARIABLES,
@@ -158,7 +159,9 @@ def run_algorithm(data_from_file: str):
         NESTED_LIST_VARIABLES,
         STRING_LIST_VARIIABLES,
     )
-    authors = sort_authors(prepare_authors_and_their_publications(data))
+    authors = prepare_authors_and_their_publications(data)
+    set_rate_for_authors(authors)
+    authors = sort_authors(authors)
     approximated_pubs_rate = count_approximated_pubs_rate(authors)
     publications = choose_final_publications(authors, data)
     print(publications)

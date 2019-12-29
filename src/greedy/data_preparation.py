@@ -49,7 +49,7 @@ def count_author_rate(author: Author) -> float:
     num = author.get_number_of_publications_to_considerate()
 
     if num == 0:
-        raise ZeroDivisionError("There is no publications to considerate")
+        return 0
 
     return points / num
 
@@ -169,13 +169,23 @@ def prepare_authors_and_their_publications(data: dict) -> None:
     data = normalize_data(data)
     authors = prepare_authors(data)
     prepare_publications(authors, data)
+    return authors
 
 
-def set_rate_for_authors(authors):
+def set_rate_for_authors(authors: List[Author]) -> None:
+    """
+    Counts and sets rates for authors.
+
+    Args:
+        autors: list of authors
+
+    """
     for auth in authors:
         auth.set_rate(count_author_rate(auth))
 
 
 def sort_authors(authors: List[Author]):
-    set_rate_for_authors(authors)
+    """
+    Sorts authors by rate
+    """
     return sorted(authors, key=lambda author: author.get_rate(), reverse=True)

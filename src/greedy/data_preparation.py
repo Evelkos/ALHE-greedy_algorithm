@@ -15,34 +15,90 @@ from src.greedy.settings import (
 )
 
 
-def count_author_rate(author):
+def normalize_data(data: dict):
+    """
+    Normalizes data from given dictionary (changes all zeros to False values and
+    all ones to True values) for functions that load authors.
+
+    Args:
+        data: dictionary that contains data needed to load authors and their
+            publications. It contains keys IS_EMPLOYEE and IS_PHD_STUDENT, specified
+            in settings.py file
+
+    Returns:
+        Normalized dictionary
+
+    """
+    data[IS_EMPLOYEE] = [False if emp == 0 else True for emp in data[IS_EMPLOYEE]]
+    data[IS_PHD_STUDENT] = [False if ps == 0 else True for ps in data[IS_PHD_STUDENT]]
+    return data
+
+
+def count_author_rate(author: Author) -> float:
+    """
+    Counts single author rate.
+
+    Args:
+        author: single author
+
+    Returns:
+        Author's rate
+
+    """
     points = author.get_sum_of_publications_to_considerate()
     num = author.get_number_of_publications_to_considerate()
+
+    if num == 0:
+        raise ZeroDivisionError("There is no publications to considerate")
+
     return points / num
 
 
-def prepare_authors(
-    authors: List[str],
-    employees: List[int],
-    phd_students: List[int],
-    contribution: List[float],
-    is_in_n: List[int],
-) -> List[Author]:
-    result = []
-    for author, is_emp, is_phd, cont, in_n in zip(
-        authors, employees, phd_students, contribution, is_in_n
-    ):
-        is_emp = False if is_emp == 0 else True
-        is_phd = False if is_phd == 0 else True
-        author = Author(author, is_emp, is_phd, cont, in_n)
-        result.append(author)
+def prepare_authors(data: dict) -> List[Author]:
+    """
+    Prepares list of authors without their publications list
 
+    Args:
+        data: dictionary with keyes:
+            AUTHOR_ID: list of authors' ids
+            IS_EMPLOYEE: list that defines which authors are employees
+            IS_PHD_STUDENT: list that defines which authors are phd students
+            CONTRIBUTION: list of authors' contributions
+            IS_IN_N: list that defines which authors are in N
+            All keys are defined in settings.py
+
+    Returns:
+        List of authors
+
+    """
+    result = []
+    for idx in range(len(data[AUTHOR_ID])):
+        author_id = data[AUTHOR_ID][idx]
+        is_emp = data[IS_EMPLOYEE][idx]
+        is_phd = data[IS_PHD_STUDENT][idx]
+        cont = data[CONTRIBUTION][idx]
+        in_n = data[IS_IN_N][idx]
+        result.append(Author(author_id, is_emp, is_phd, cont, in_n))
     return result
 
 
 def create_publications_list(
     pubs: List[str], mons: List[int], points: List[float], contribs: List[float]
 ):
+    """
+    Creates publications list for single author.
+
+    Args:
+        pubs: list of publications' ids
+        mons: list that defines which publications are monographs
+        points: lists that contains points from publications for single author
+        contribs: list that contains contributions from publications for single
+            author
+
+    Returns:
+        List of publications. Publications with 0 points or 0.0 contribution are
+        not contained
+    """
     assert len(pubs) == len(mons)
     assert len(points) == len(contribs)
     assert len(pubs) == len(contribs)
@@ -56,38 +112,63 @@ def create_publications_list(
     return result
 
 
-def prepare_publications(
-    authors: List[Author],
-    publications: List[Any],
-    monographs: List[int],
-    publications_points: List[float],
-    publications_contributions: List[Any],
-) -> None:
-    for author, points, contrib in zip(
-        authors, publications_points, publications_contributions
-    ):
-        pubs = create_publications_list(publications, monographs, points, contrib)
+def prepare_publications(authors: List[Author], data: dict) -> None:
+    """
+    Prepares lists of publications, attaches them to authors and creates ranking of
+    publications for each author.
+
+    Args:
+        authors: list of authors
+        data: dictionary with keys:
+            PUBLICATION_ID: list of publications' ids
+            IS_MONOGRAPH: list that defines which publications are monographs
+            PUBLICATION_POINTS_FOR_AUTHOR: list of lists. Each list contains 
+                publications' points for single author
+            PUBLICATION_CONTRIB_FOR_AUTHOR: list of lists. Each list contains
+                publications' contributions for single author
+            All keys are defined in settings.py
+
+    """
+    pubs_ids = data[PUBLICATION_ID]
+    mons = data[IS_MONOGRAPH]
+
+    for idx, author in enumerate(authors, 0):
+        auth_pubs = data[PUBLICATION_POINTS_FOR_AUTHOR][idx]
+        auth_contribs = data[PUBLICATION_CONTRIB_FOR_AUTHOR][idx]
+        pubs = create_publications_list(pubs_ids, mons, auth_pubs, auth_contribs)
         author.load_publications(pubs)
         author.create_publications_ranking()
-
-
-def prepare_authors_and_their_publications(data):
-    authors = prepare_authors(
-        data[AUTHOR_ID],
-        data[IS_EMPLOYEE],
-        data[IS_PHD_STUDENT],
-        data[CONTRIBUTION],
-        data[IS_IN_N],
-    )
-    prepare_publications(
-        authors,
-        data[PUBLICATION_ID],
-        data[IS_MONOGRAPH],
-        data[PUBLICATION_POINTS_FOR_AUTHOR],
-        data[PUBLICATION_CONTRIB_FOR_AUTHOR],
-    )
-
     return authors
+
+
+def prepare_authors_and_their_publications(data: dict) -> None:
+    """
+    Main function for data preparation.
+    Normalizes data and then creates authors and lists of publications. Attaches
+    publications to authors
+
+    Args:
+        data: dictionary with keys:
+            PUBLICATION_ID: list of publications' ids
+            IS_MONOGRAPH: list that defines which publications are monographs
+            PUBLICATION_POINTS_FOR_AUTHOR: list of lists. Each list contains 
+                publications' points for single author
+            PUBLICATION_CONTRIB_FOR_AUTHOR: list of lists. Each list contains
+                publications' contributions for single author
+            AUTHOR_ID: list of authors' ids
+            IS_EMPLOYEE: list that defines which authors are employees
+            IS_PHD_STUDENT: list that defines which authors are phd students
+            CONTRIBUTION: list of authors' contributions
+            IS_IN_N: list that defines which authors are in N
+            All keys are defined in settings.py
+
+    Returns:
+        List of authors (for tests)
+
+    """
+    data = normalize_data(data)
+    authors = prepare_authors(data)
+    prepare_publications(authors, data)
 
 
 def set_rate_for_authors(authors):

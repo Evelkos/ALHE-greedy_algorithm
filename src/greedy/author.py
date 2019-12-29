@@ -1,6 +1,7 @@
 from typing import Any, List
 
 from src.greedy.publication import Publication
+from src.greedy.tools import compare_lists
 
 PUBLICATIONS_COEFFICIENT = 4
 MONOGRAPH_COEFFICIENT = 2
@@ -12,12 +13,12 @@ PUBLICATIONS_COEFFICIENT_FOR_PHD = 4
 
 class Author:
     def __init__(
-        self, author_id: str, is_emp: bool, is_phd: bool, contrib: float, czyn: int
+        self, author_id: str, is_emp: bool, is_phd: bool, contrib: float, in_n: int
     ):
         self.id = author_id
         self.is_phd = is_phd
         self.is_emp = is_emp
-        self.czyn = czyn
+        self.in_n = in_n
         self.contribution = Author.__update_contribution(contrib)
 
         self.publications = None
@@ -26,7 +27,18 @@ class Author:
         self.__publications_to_considerate_sum = None
 
     def __str__(self):
-        return f"{self.id}"
+        return f"{self.id} {self.is_emp} {self.is_phd} {self.contribution} {self.in_n}"
+
+    def __eq__(self, other):
+        return (
+            self.id == other.id
+            and self.is_phd == other.is_phd
+            and self.is_emp == other.is_emp
+            and self.contribution == other.contribution
+            and self.in_n == other.in_n
+            and compare_lists(self.publications, other.publications)
+            and compare_lists(self.to_considerate, other.to_considerate)
+        )
 
     def __check_if_to_considerate_list_is_not_none(self):
         if self.to_considerate is None:

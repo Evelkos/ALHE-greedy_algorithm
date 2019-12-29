@@ -35,6 +35,17 @@ def create_example_publications_list():
     return publications
 
 
+def create_complex_publications_list():
+    pubs = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    mons = [True, True, True, False, True, False, False, False, True, True]
+    points = [100.0, 10.0, 90.0, 20.0, 80.0, 30.0, 70.0, 40.0, 60.0, 50.0]
+    contribs = [1.0, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0]
+    publications = []
+    for pub_id, is_mono, pts, contrib in zip(pubs, mons, points, contribs):
+        publications.append(Publication(pub_id, is_mono, pts, contrib))
+    return publications
+
+
 def create_example_author():
     return Author(AUTH_ID, IS_EMP, IS_PHD, CONTRIB, CZYN)
 
@@ -57,19 +68,10 @@ def prepare_basic_test_data():
 
 
 def prepare_complex_test_data():
+    publications = create_complex_publications_list()
     author = Author("author", True, False, 0.5, 1)
-
-    pubs = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-    mons = [True, True, True, False, True, False, False, False, True, True]
-    points = [100.0, 10.0, 90.0, 20.0, 80.0, 30.0, 70.0, 40.0, 60.0, 50.0]
-    contribs = [1.0, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0]
-    publications = []
-    for pub_id, is_mono, pts, contrib in zip(pubs, mons, points, contribs):
-        publications.append(Publication(pub_id, is_mono, pts, contrib))
-
     author.load_publications(publications)
     author.create_publications_ranking()
-
     return author, publications
 
 

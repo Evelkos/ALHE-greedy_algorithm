@@ -10,6 +10,14 @@ class Publication:
     def __str__(self):
         return f"{self.id} {self.is_mono} {self.points} {self.contribution} {self.get_rate()}"
 
+    def __eq__(self, other):
+        return (
+            self.id == other.id
+            and self.is_mono == other.is_mono
+            and self.points == other.points
+            and self.contribution == other.contribution
+        )
+
     def is_monograph(self):
         return self.is_mono
 

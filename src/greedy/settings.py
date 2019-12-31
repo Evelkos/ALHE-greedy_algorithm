@@ -25,6 +25,8 @@ NESTED_LIST_VARIABLES = [PUBLICATION_CONTRIB_FOR_AUTHOR, PUBLICATION_POINTS_FOR_
 STRING_LIST_VARIIABLES = [AUTHOR_ID, PUBLICATION_ID]
 
 # Path to the file with data
+# inzynieria_biomedyczna-input.txt - BLAD
 FILEPATH = "/home/ewelina/Studia/Semestr 7/ALHE/Projekt/ALHE-greedy_algorithm/data/filozofia-input.txt"
+DIRPATH = "/home/ewelina/Studia/Semestr 7/ALHE/Projekt/ALHE-greedy_algorithm/data/"
 
 HEURISTIC_AUTHORS_LIST_LEN = 5

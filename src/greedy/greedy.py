@@ -160,7 +160,7 @@ def choose_publications_to_publish(authors: List[Author], data: dict) -> Tuple[L
     return publications_to_publish, goal_function
 
 
-def run_algorithm(data_from_file: str) -> Tuple[List[Publication], float]:
+def run_algorithm(data: dict) -> Tuple[List[Publication], float]:
     """
     Runs full greedy algorithm. Loads data from given string, prepares authors and
     publications, attaches publications to authors. When all data is loaded
@@ -173,13 +173,6 @@ def run_algorithm(data_from_file: str) -> Tuple[List[Publication], float]:
         list of publications to publish and value of goal function
 
     """
-    data = load_data(
-        data_from_file,
-        DIGITAL_VARIABLES,
-        LIST_VARIABLES,
-        NESTED_LIST_VARIABLES,
-        STRING_LIST_VARIIABLES,
-    )
     authors = prepare_authors_and_their_publications(data)
     set_rate_for_authors(authors)
     authors = sort_authors(authors)

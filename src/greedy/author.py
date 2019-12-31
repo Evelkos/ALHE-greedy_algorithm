@@ -21,7 +21,7 @@ class Author:
         self.in_n = in_n
         self.contribution = Author.__update_contribution(contrib)
 
-        self.publications = None
+        self.publications = []
         self.to_considerate = None
         self.rate = None
         self.__publications_to_considerate_sum = None
@@ -155,6 +155,9 @@ class Author:
 
     def get_contribution(self):
         return self.contribution
+
+    def get_id(self):
+        return self.id
 
     def get_publications(self):
         self.__check_if_publications_are_loaded()

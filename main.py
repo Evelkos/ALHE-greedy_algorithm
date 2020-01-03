@@ -1,8 +1,8 @@
 from src.greedy.greedy import run_algorithm, load_data
 from src.greedy.settings import FILEPATH, DIRPATH, DIGITAL_VARIABLES, LIST_VARIABLES, NESTED_LIST_VARIABLES, STRING_LIST_VARIIABLES
 from src.greedy.output_converter import convert_dictionary_to_vector
-# from os.path import isfile, join
-# from os import listdir
+from src.greedy.publication import Publication
+from typing import List
 import os
 import json
 
@@ -20,57 +20,71 @@ def get_list_of_input_files_from_dir(dirpath: str):
     for file in os.listdir(DIRPATH):
         if file.endswith(".txt"):
             files.append(os.path.join(DIRPATH, file))
-    return files    
+    return files
+
+
+def convert_publications_to_dictionary(publications: List[Publication]) -> dir:
+    result_publications = {}
+    for pub in publications:
+        if not pub.get_id() in result_publications:
+            result_publications.update({pub.get_id(): [pub.get_author().get_id()]})
+        else:
+            result_publications[pub.get_id()].append(pub.get_author().get_id())
+    return result_publications
 
 
 if __name__ == "__main__":
-    files = get_list_of_input_files_from_dir(DIRPATH)
+    # files = get_list_of_input_files_from_dir(DIRPATH)
+    files = [FILEPATH]
 
     for filepath in files:
         best_h = 0
         best_goal = 0
 
-        for i in range(5, 20):
-            HEURISTIC_AUTHORS_LIST_LEN = i
-        try:
-            if not os.path.isfile(filepath):
-                raise FileNotFoundError(f"Datafile {filepath} not found")
 
-            with open(filepath, "r") as file:
-                data = file.read()
+        for i in range(10, 100):
+            try:
+                if not os.path.isfile(filepath):
+                    raise FileNotFoundError(f"Datafile {filepath} not found")
 
-            data = load_data(
-                data,
-                DIGITAL_VARIABLES,
-                LIST_VARIABLES,
-                NESTED_LIST_VARIABLES,
-                STRING_LIST_VARIIABLES,
-            )
+                with open(filepath, "r") as file:
+                    data = file.read()
 
-            publications, goal_function = run_algorithm(data)
+                data = load_data(
+                    data,
+                    DIGITAL_VARIABLES,
+                    LIST_VARIABLES,
+                    NESTED_LIST_VARIABLES,
+                    STRING_LIST_VARIIABLES,
+                )
+                publications, goal_function = run_algorithm(data, i)
+                result_publications = convert_publications_to_dictionary(publications)
+                result = {
+                    "publications": result_publications,
+                    "goal_function": goal_function,
+                }
 
-            result_publications = {}
-            for pub in publications:
-                if not pub.get_id() in result_publications:
-                    result_publications.update({pub.get_id(): [pub.get_author().get_id()]})
-                else:
-                    result_publications[pub.get_id()].append(pub.get_author().get_id())
+                result_vector = convert_dictionary_to_vector(result_publications, data)
 
-            result = {
-                "publications": result_publications,
-                "goal_function": goal_function,
-            }
+                path = get_result_path(filepath)
+                # if(goal_function > best_goal):
+                #     best_goal = goal_function
+                #     best_h = i
+                #     with open(path, "w") as file:
+                #         file.write(f"vector = {result_vector};")
+                #         file.write("\n")
+                #         file.write("\n")
+                #         file.write(f"goal_function = {goal_function};")
 
-            result_vector = convert_dictionary_to_vector(result_publications, data)
-
-            path = get_result_path(filepath)
-            if(goal_function > best_goal):
-                best_goal = goal_function
-                best_h = i
-                with open(path, "w") as file:
-                    file.write(f"vector = {result_vector};")
-                    file.write("\n")
+                    # best_goal = goal_function
+                    # best_h = i
+                with open(path, "a") as file:
+                    file.write(f"heuristic_publications_number = {i}")
                     file.write("\n")
                     file.write(f"goal_function = {goal_function};")
-        except Exception:
-            continue
+                    file.write("\n")
+                    file.write("\n")
+
+            except Exception as e:
+                print(e)
+                continue

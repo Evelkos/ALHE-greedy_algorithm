@@ -22,24 +22,6 @@ from src.greedy.author import Author
 from src.greedy.publication import Publication
 
 
-def count_approximated_pubs_rate(authors: List[Author]) -> float:
-    """
-    Counts first value of heuristic function.
-
-    Args:
-        authors: list of authors
-
-    Returns:
-        firs value of heuristic function
-
-    """
-    rate = 0
-    for idx, auth in enumerate(authors):
-        if idx < HEURISTIC_AUTHORS_LIST_LEN:
-            rate += auth.get_sum_of_publications_to_considerate()
-    return rate
-
-
 def consider_single_publication(auth: Author, pub: Publication, curr_sums: dict, data: dict) -> bool:
     """
     Assumes that publication will be accepted and checks limits.
@@ -74,22 +56,15 @@ def consider_single_publication(auth: Author, pub: Publication, curr_sums: dict,
     return check_limits(data, tmp_sums)
 
 
-def get_points_from_auth_below(authors: List[Author], idx: int) -> float:
-    """
-    Gets average publication's points from author with smaller rate value than
-    author currently analysed in choose_publications_to_publish().
-
-    Args:
-        authors: list of authors
-        idx: idx of currently analysed author
-
-    Returns:
-        average publication's points from author with smaller rate value
-
-    """
-    if len(authors) > HEURISTIC_AUTHORS_LIST_LEN + idx:
-        return authors[HEURISTIC_AUTHORS_LIST_LEN + idx].get_average_pub_points()
-    return 0
+def get_heuristic_value(auths: List[Author], idx: int, remaining_pubs: int) -> float:
+    heur = 0
+    for auth in auths[idx:]:
+        pubs = min(auth.get_number_of_publications_to_considerate(), remaining_pubs)
+        heur += pubs * auth.get_average_pub_points()
+        remaining_pubs -= pubs
+        if remaining_pubs <= 0:
+            break
+    return heur
 
 
 def update_current_sums(curr_sums: dict, pub: Publication, auth: Author) -> dict:
@@ -126,7 +101,7 @@ def update_current_sums(curr_sums: dict, pub: Publication, auth: Author) -> dict
     return result
 
 
-def choose_publications_to_publish(authors: List[Author], data: dict) -> Tuple[List[Publication], float]:
+def choose_publications_to_publish(authors: List[Author], data: dict, heur_auth_list_len: int) -> Tuple[List[Publication], float]:
     """
     Chooses publications to publish
 
@@ -140,27 +115,27 @@ def choose_publications_to_publish(authors: List[Author], data: dict) -> Tuple[L
     """
     publications_to_publish = []
     curr_sums = {"contrib_sum": 0, "monograph_sum": 0, "phd_and_outsiders": 0}
-    heuristic_function = count_approximated_pubs_rate(authors)
     goal_function = 0
 
     for idx, author in enumerate(authors, 0):
         for pub in author.get_publications_to_considerate():
             if consider_single_publication(author, pub, curr_sums, data):
-                heu_pub = heuristic_function - pub.get_points()
-                heu_without_pub = heu_pub + get_points_from_auth_below(authors, idx)
+                heu_pub = get_heuristic_value(authors, idx, heur_auth_list_len - 1)
+                heu_without_pub = get_heuristic_value(authors, idx, heur_auth_list_len)
                 tmp_goal_function = goal_function + pub.get_points()
 
                 if goal_function + heu_without_pub > tmp_goal_function + heu_pub:
                     heuristic_function = heu_without_pub
                 else:
                     goal_function = tmp_goal_function
-                    heuristic_function = heu_pub
+                    if heur_auth_list_len > 0:
+                        heur_auth_list_len -= 1
                     curr_sums = update_current_sums(curr_sums, pub, author)
                     publications_to_publish.append(pub)
     return publications_to_publish, goal_function
 
 
-def run_algorithm(data: dict) -> Tuple[List[Publication], float]:
+def run_algorithm(data: dict, heur_auth_list_len: int) -> Tuple[List[Publication], float]:
     """
     Runs full greedy algorithm. Loads data from given string, prepares authors and
     publications, attaches publications to authors. When all data is loaded
@@ -176,6 +151,6 @@ def run_algorithm(data: dict) -> Tuple[List[Publication], float]:
     authors = prepare_authors_and_their_publications(data)
     set_rate_for_authors(authors)
     authors = sort_authors(authors)
-    publications, goal_function = choose_publications_to_publish(authors, data)
+    publications, goal_function = choose_publications_to_publish(authors, data, heur_auth_list_len)
     assert check_limits(data, count_curr_sums_for_publications(publications))
     return publications, goal_function

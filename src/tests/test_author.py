@@ -219,8 +219,7 @@ def test_create_publications_ranking():
 
 
 def test_create_publications_ranking_without_loaded_publications():
-    with pytest.raises(AttributeError):
-        create_example_author().create_publications_ranking()
+    assert create_example_author().create_publications_ranking() == []
 
 
 def test_get_contribution():
@@ -234,8 +233,7 @@ def test_get_publications():
 
 
 def test_get_publications_without_loaded_publications():
-    with pytest.raises(AttributeError):
-        create_example_author().get_publications()
+    assert create_example_author().get_publications() == []
 
 
 def test_get_publications_to_considerate():

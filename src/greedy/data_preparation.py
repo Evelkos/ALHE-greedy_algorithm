@@ -1,7 +1,9 @@
 from typing import Any, List
+import numpy as np
 
 from src.greedy.author import Author
 from src.greedy.publication import Publication
+from src.greedy.output_converter import get_empty_vector, get_idx_map
 from src.greedy.settings import (
     AUTHOR_ID,
     CONTRIBUTION,
@@ -12,6 +14,9 @@ from src.greedy.settings import (
     PUBLICATION_CONTRIB_FOR_AUTHOR,
     PUBLICATION_ID,
     PUBLICATION_POINTS_FOR_AUTHOR,
+    EMPLOYEES_NUM,
+    PUBLICATIONS_NUM,
+    INITIAL_PUBS,
 )
 
 
@@ -83,7 +88,7 @@ def prepare_authors(data: dict) -> List[Author]:
 
 
 def create_publications_list(
-    pubs: List[str], mons: List[int], points: List[float], contribs: List[float]
+    pubs: List[str], mons: List[int], points: List[float], contribs: List[float], init: List[int] = None
 ):
     """
     Creates publications list for single author.
@@ -99,17 +104,23 @@ def create_publications_list(
         List of publications. Publications with 0 points or 0.0 contribution are
         not contained
     """
+    if init is None:
+        init = [0 for _ in range(len(pubs))]
+
     assert len(pubs) == len(mons)
     assert len(points) == len(contribs)
     assert len(pubs) == len(contribs)
+    assert len(init) == len(pubs)
 
     result = []
-    for pub_id, is_mon, pts, contrib in zip(pubs, mons, points, contribs):
+
+    for pub_id, is_mon, pts, contrib, ini in zip(pubs, mons, points, contribs, init):
         if pts > 0 and contrib > 0:
             is_mon = False if is_mon == 0 else True
-            result.append(Publication(pub_id, is_mon, pts, contrib))
+            ini = False if ini == 0 else True
+            result.append(Publication(pub_id, is_mon, pts, contrib, None, ini))
 
-    return result
+    return result      
 
 
 def prepare_publications(authors: List[Author], data: dict) -> None:
@@ -126,6 +137,8 @@ def prepare_publications(authors: List[Author], data: dict) -> None:
                 publications' points for single author
             PUBLICATION_CONTRIB_FOR_AUTHOR: list of lists. Each list contains
                 publications' contributions for single author
+            INITIAL_PUBS: list of lists. Each list defines author's publications
+                included in initial result
             All keys are defined in settings.py
 
     """
@@ -134,11 +147,133 @@ def prepare_publications(authors: List[Author], data: dict) -> None:
 
     for idx, author in enumerate(authors, 0):
         auth_pubs = data[PUBLICATION_POINTS_FOR_AUTHOR][idx]
-        auth_contribs = data[PUBLICATION_CONTRIB_FOR_AUTHOR][idx]
-        pubs = create_publications_list(pubs_ids, mons, auth_pubs, auth_contribs)
+        auth_contrs = data[PUBLICATION_CONTRIB_FOR_AUTHOR][idx]
+        init = data[INITIAL_PUBS][idx]
+        pubs = create_publications_list(pubs_ids, mons, auth_pubs, auth_contrs, init)
         author.load_publications(pubs)
-        author.create_publications_ranking()
     return authors
+
+
+def get_temporary_pub_rate(pub: Publication):
+    return pub.get_points() / pub.get_contribution()
+
+
+def get_empty_choosen_pubs_list(data) -> List[List[int]]:
+    """
+    Returns empty vector.
+
+    Returns:
+        List of lists that contains publications that need to be included in
+        greedy algorithm result.
+
+    """
+    return get_empty_vector(data[EMPLOYEES_NUM], data[PUBLICATIONS_NUM])
+
+
+def get_full_choosen_pubs_list(data: dict) -> List[List[int]]:
+    """
+    Chooses all publications for every author.
+
+    Args:
+        data: contains normalized data from input file
+
+    Returns:
+        List of lists that contains publications that need to be included in
+        greedy algorithm result.
+
+    """
+    publications = get_empty_vector(data[EMPLOYEES_NUM], data[PUBLICATIONS_NUM])
+
+    rows = len(data[PUBLICATION_POINTS_FOR_AUTHOR])
+    columns = len(data[PUBLICATION_POINTS_FOR_AUTHOR][0])
+    for row in range(rows):
+        for column in range(columns):
+            points = data[PUBLICATION_POINTS_FOR_AUTHOR][row][column]
+            contrib = data[PUBLICATION_CONTRIB_FOR_AUTHOR][row][column]
+            if points != 0 and contrib != 0:
+                publications[row][column] += 1
+
+    return publications
+
+
+def get_choosen_pubs(data: dict, auth_pubs_num: int, shuffle) -> List[List[int]]:
+    """
+    Chooses number of publications for every author. Publications are shuffled by
+    shuffle function (ex. sort_pubs(), shuffle_pubs()) then first auth_pubs_num
+    publications are selected
+
+    Args:
+        data: contains normalized data from input file
+        auth_pubs_num: number of publications choosen for author
+
+    Returns:
+        List of lists that contains publications that need to be included in
+        greedy algorithm result.
+
+    """
+    publications = get_empty_vector(data[EMPLOYEES_NUM], data[PUBLICATIONS_NUM])
+    publications_idx_map = get_idx_map(data, PUBLICATION_ID)
+    pubs_ids = data[PUBLICATION_ID]
+    mons = data[IS_MONOGRAPH]
+
+    for auth in range(len(data[PUBLICATION_POINTS_FOR_AUTHOR])):
+        auth_pubs = data[PUBLICATION_POINTS_FOR_AUTHOR][auth]
+        auth_contribs = data[PUBLICATION_CONTRIB_FOR_AUTHOR][auth]
+        pubs = create_publications_list(pubs_ids, mons, auth_pubs, auth_contribs)
+        pubs = shuffle(pubs)
+
+        contrib_sum = 0
+        choosen_pubs = 0
+        for pub in pubs:
+            if choosen_pubs >= auth_pubs_num:
+                break
+            if pub.get_contribution() + contrib_sum <= 4:
+                pub_idx = publications_idx_map[pub.get_id()]
+                contrib_sum += pub.get_contribution()
+                publications[auth][pub_idx] += 1
+                choosen_pubs += 1
+    return publications
+
+
+def sort_pubs(pubs: List[Publication]) -> List[Publication]:
+    result = sorted(pubs, key=lambda pub: get_temporary_pub_rate(pub), reverse=True)
+    return result
+
+
+def shuffle_pubs(pubs: List[Publication]) -> List[Publication]:
+    np.random.shuffle(pubs)
+    return pubs
+
+
+def get_initial_publications(mode: int, data: dict, auth_pubs_num: int = None) -> List[List[int]]:
+    """
+    Prepares initial publications list according to choosen mode.
+
+    Args:
+        mode:
+            0 - empty publications list
+            1 - full publications list
+            2 - first auth_pubs_num publications from sorted publications list
+            3 - first auth_pubs_num publications from sorted shuffled list
+        data: contains normalized data from input file
+        auth_pubs_num: initial number of publications choosen for each author
+
+    Returns:
+        List of initial, accepted publications (List of lists with zeros or ones)
+
+    Raises:
+        AttributeError if given mode does not exist
+
+    """
+    if mode == 0:
+        return get_empty_choosen_pubs_list(data)
+    elif mode == 1:
+        return get_full_choosen_pubs_list(data)
+    elif mode == 2:
+        return get_choosen_pubs(data, auth_pubs_num, sort_pubs)
+    elif mode == 3:
+        return get_choosen_pubs(data, auth_pubs_num, shuffle_pubs)
+    raise AttributeError("Wrong mode choosen. Supported modes: 0, 1, 2, 3")
 
 
 def prepare_authors_and_their_publications(data: dict) -> None:
@@ -160,15 +295,20 @@ def prepare_authors_and_their_publications(data: dict) -> None:
             IS_PHD_STUDENT: list that defines which authors are phd students
             CONTRIBUTION: list of authors' contributions
             IS_IN_N: list that defines which authors are in N
+            INITIAL_PUBS: list of lists. Each list defines author's publications
+                included in initial result
             All keys are defined in settings.py
 
     Returns:
         List of authors (for tests)
 
     """
-    data = normalize_data(data)
     authors = prepare_authors(data)
     prepare_publications(authors, data)
+
+    for author in authors:
+        author.create_publications_ranking()
+
     return authors
 
 

@@ -135,7 +135,7 @@ def choose_publications_to_publish(authors: List[Author], data: dict, heur_auth_
     return publications_to_publish, goal_function
 
 
-def run_algorithm(data: dict, heur_auth_list_len: int) -> Tuple[List[Publication], float]:
+def run_algorithm(data: dict, heur_fin_pubs: int) -> Tuple[List[Publication], float]:
     """
     Runs full greedy algorithm. Loads data from given string, prepares authors and
     publications, attaches publications to authors. When all data is loaded
@@ -143,14 +143,16 @@ def run_algorithm(data: dict, heur_auth_list_len: int) -> Tuple[List[Publication
 
     Args:
         data_from_file: contains data from file
+        heur_fin_pubs: heuristic number of publications to publish
 
     Retrns:
         list of publications to publish and value of goal function
 
     """
+
     authors = prepare_authors_and_their_publications(data)
     set_rate_for_authors(authors)
     authors = sort_authors(authors)
-    publications, goal_function = choose_publications_to_publish(authors, data, heur_auth_list_len)
+    publications, goal_function = choose_publications_to_publish(authors, data, heur_fin_pubs)
     assert check_limits(data, count_curr_sums_for_publications(publications))
     return publications, goal_function

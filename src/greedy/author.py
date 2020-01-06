@@ -26,6 +26,8 @@ class Author:
         self.rate = None
         self.__publications_to_considerate_sum = None
 
+        self.accepted_publications = []
+
     def __str__(self):
         return f"{self.id} {self.is_emp} {self.is_phd} {self.contribution} {self.in_n}"
 
@@ -126,11 +128,11 @@ class Author:
 
         return best_publications
 
-    def __get_sorted_publications(self):
-        return sorted(self.publications, key=lambda pub: pub.get_rate(), reverse=True)
+    def __get_sorted_publications(self, filter_fun = lambda x: True):
+        selected_pubs = list(filter(lambda x: filter_fun(x), self.publications))
+        return sorted(selected_pubs, key=lambda pub: pub.get_rate(), reverse=True)
 
     def __update_contribution(contribution: float):
-        # TODO - check first limit - how to count contribution
         if contribution < MIN_CONTRIBUTION:
             return MIN_CONTRIBUTION
         elif contribution > MAX_CONTRIBUTION:
@@ -162,6 +164,9 @@ class Author:
     def get_publications(self):
         self.__check_if_publications_are_loaded()
         return self.publications
+
+    def get_publications_num(self):
+        return len(self.publications)
 
     def get_publications_to_considerate(self):
         return self.to_considerate
@@ -204,6 +209,7 @@ class Author:
                 pub.set_author(self)
                 result.append(pub)
 
+        self.accepted_publications = list(filter(lambda x: x.is_accepted(), result))
         self.publications = result
 
     def set_rate(self, new_rate: float):

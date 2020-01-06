@@ -1,15 +1,16 @@
 class Publication:
     def __init__(
-        self, publication_id: str, is_mono: bool, points: float, contribution: float, author = None
+        self, publication_id: str, is_mono: bool, points: float, contribution: float, author = None, accepted: bool = False
     ):
         self.id = publication_id
         self.is_mono = is_mono
         self.points = points
         self.contribution = contribution
         self.author = author
+        self.accepted = accepted
 
     def __str__(self):
-        return f"{self.id} {self.is_mono} {self.points} {self.contribution} {self.get_rate()}"
+        return f"id = {self.id} mono = {self.is_mono} points =  {self.points} contrib = {self.contribution} rate = {self.get_rate()} accepted = {self.accepted}"
 
     def __eq__(self, other):
         return (
@@ -18,6 +19,9 @@ class Publication:
             and self.points == other.points
             and self.contribution == other.contribution
         )
+
+    def is_accepted(self):
+        return self.accepted
 
     def is_monograph(self):
         return self.is_mono

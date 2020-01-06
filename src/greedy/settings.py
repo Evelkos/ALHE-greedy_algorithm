@@ -24,6 +24,10 @@ LIST_VARIABLES = [CONTRIBUTION, IS_PHD_STUDENT, IS_EMPLOYEE, IS_IN_N, IS_MONOGRA
 NESTED_LIST_VARIABLES = [PUBLICATION_CONTRIB_FOR_AUTHOR, PUBLICATION_POINTS_FOR_AUTHOR]
 STRING_LIST_VARIIABLES = [AUTHOR_ID, PUBLICATION_ID]
 
+
+# Additional key in data directory: included publications
+INITIAL_PUBS = "included_publications"
+
 # Path to the file with data
 # inzynieria_biomedyczna-input.txt - BLAD
 FILEPATH = "/home/ewelina/Studia/Semestr 7/ALHE/Projekt/ALHE-greedy_algorithm/data/filozofia-input.txt"

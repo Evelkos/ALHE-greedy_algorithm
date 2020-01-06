@@ -7,13 +7,7 @@ from src.greedy.author import (
     Author,
 )
 from src.greedy.publication import Publication
-
-from src.greedy.settings import (
-    EMPLOYEES_NUM,
-    N0,
-    N1,
-    N2,
-)
+from src.greedy.settings import EMPLOYEES_NUM, N0, N1, N2
 
 
 def check_publications_number_limit(data: dict, contrib_sum: float) -> bool:
@@ -57,6 +51,7 @@ def check_author_limits(auth: Author, publications: List[Publication]):
         for pub in publications:
             publications_sum += pub.get_contribution()
         assert publications_sum <= PUBLICATIONS_COEFFICIENT_FOR_PHD
+    return True
 
 
 def count_curr_sums_for_publications(publications):
@@ -74,6 +69,6 @@ def count_curr_sums_for_publications(publications):
     curr_sums = {
         "contrib_sum": contrib_sum,
         "monograph_sum": monograph_sum,
-        "phd_and_outsiders": phd_and_outsiders
+        "phd_and_outsiders": phd_and_outsiders,
     }
     return curr_sums

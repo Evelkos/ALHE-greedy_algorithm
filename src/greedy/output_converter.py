@@ -1,5 +1,11 @@
-from src.greedy.settings import EMPLOYEES_NUM, PUBLICATIONS_NUM, AUTHOR_ID, PUBLICATION_ID
 from typing import List
+
+from src.greedy.settings import (
+    AUTHOR_ID,
+    EMPLOYEES_NUM,
+    PUBLICATION_ID,
+    PUBLICATIONS_NUM,
+)
 
 
 def get_empty_vector(rows: int, columns: int) -> List[List[int]]:
@@ -52,7 +58,7 @@ def convert_dictionary_to_vector(pubs_auths: dict, data: dict) -> List[List[int]
     result = get_empty_vector(data[EMPLOYEES_NUM], data[PUBLICATIONS_NUM])
     authors_idx_map = get_idx_map(data, AUTHOR_ID)
     publications_idx_map = get_idx_map(data, PUBLICATION_ID)
-    
+
     for publication_id in pubs_auths.keys():
         for author_id in pubs_auths[publication_id]:
             row = authors_idx_map[author_id]

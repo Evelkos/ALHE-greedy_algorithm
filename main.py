@@ -63,12 +63,13 @@ if __name__ == "__main__":
             auth_pubs_num = 2
             data[INITIAL_PUBS] = get_initial_publications(mode, data, auth_pubs_num)
 
-        #     publications, goal_function = run_algorithm(data, i)
-        #     result_publications = convert_publications_to_dictionary(publications)
-        #     result = {
-        #         "publications": result_publications,
-        #         "goal_function": goal_function,
-        #     }
+            publications, goal_function = run_algorithm(data, i)
+            result_publications = convert_publications_to_dictionary(publications)
+            result = {
+                "publications": result_publications,
+                "goal_function": goal_function,
+            }
+            print(goal_function)
 
         #     result_vector = convert_dictionary_to_vector(result_publications, data)
 

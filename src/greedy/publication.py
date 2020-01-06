@@ -1,6 +1,12 @@
 class Publication:
     def __init__(
-        self, publication_id: str, is_mono: bool, points: float, contribution: float, author = None, accepted: bool = False
+        self,
+        publication_id: str,
+        is_mono: bool,
+        points: float,
+        contribution: float,
+        author=None,
+        accepted: bool = False,
     ):
         self.id = publication_id
         self.is_mono = is_mono
@@ -43,3 +49,6 @@ class Publication:
 
     def set_author(self, author):
         self.author = author
+
+    def set_is_accepted(self, is_accepted: bool):
+        self.accepted = is_accepted

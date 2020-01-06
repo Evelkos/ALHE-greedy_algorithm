@@ -22,11 +22,12 @@ class Author:
         self.contribution = Author.__update_contribution(contrib)
 
         self.publications = []
-        self.to_considerate = None
         self.rate = None
         self.__publications_to_considerate_sum = None
 
         self.accepted_publications = []
+        self.__accepted_pubs_contrib_sum = 0
+        self.__accepted_mons_contrib_sum = 0
 
     def __str__(self):
         return f"{self.id} {self.is_emp} {self.is_phd} {self.contribution} {self.in_n}"
@@ -39,98 +40,11 @@ class Author:
             and self.contribution == other.contribution
             and self.in_n == other.in_n
             and compare_lists(self.publications, other.publications)
-            and compare_lists(self.to_considerate, other.to_considerate)
         )
 
-    def __check_if_to_considerate_list_is_not_none(self):
-        if self.to_considerate is None:
-            raise AttributeError(
-                "No publications ranking. Use create_publications_ranking() first"
-            )
-
-    def __check_if_to_considerate_list_is_not_empty(self):
-        self.__check_if_to_considerate_list_is_not_none()
-        if len(self.to_considerate) == 0:
-            raise AttributeError(
-                """No publications to considerate.
-                Use load_publications() and create_publications_ranking() first"""
-            )
-
-    def __check_if_publications_are_loaded(self):
-        if self.publications is None:
-            raise AttributeError(
-                """Publications not loaded.
-                Use load_publications() first"""
-            )
-
-    def __check_if_rate_is_set(self):
-        if self.rate is None:
-            raise AttributeError("Rate not set. Use set_rate() first")
-
-    def __check_limits(
-        self,
-        tmp_contrib_sum: float,
-        tmp_contrib_mono_sum: float,
-        is_mono: bool,
-        pts: float,
-    ) -> bool:
-        if self.is_emp:
-            if not self.__check_publications_limit(tmp_contrib_sum):
-                return False
-            if not self.__check_moographs_limit(tmp_contrib_mono_sum, is_mono, pts):
-                return False
-        if not self.__check_limits_for_phd_students(tmp_contrib_sum):
-            return False
-        return True
-
-    def __check_moographs_limit(
-        self, tmp_contrib_monograph_sum: float, is_monograph: bool, points: float
-    ) -> bool:
-        if self.is_phd:
-            return True
-        elif not is_monograph:
-            return True
-        elif tmp_contrib_monograph_sum <= MONOGRAPH_COEFFICIENT * self.contribution:
-            return True
-        elif points > MONOGRAPH_LIMIT_MAX_POINTS:
-            return True
-        return False
-
-    def __check_publications_limit(self, tmp_contrib_sum: float) -> bool:
-        return tmp_contrib_sum <= PUBLICATIONS_COEFFICIENT * self.contribution
-
-    def __check_limits_for_phd_students(self, tmp_contrib_sum: float) -> bool:
-        if not self.is_phd:
-            return True
-        elif tmp_contrib_sum <= PUBLICATIONS_COEFFICIENT_FOR_PHD:
-            return True
-        return False
-
-    def __choose_best_publications(self, rated_pubs: List[Publication]):
-        contrib_sum = 0
-        contrib_monograph_sum = 0
-        best_publications = []
-
-        for pub in rated_pubs:
-            pub_contrib = pub.get_contribution()
-            is_mono = pub.is_monograph()
-            pts = pub.get_points()
-
-            tmp_contr_sum = contrib_sum + pub_contrib
-            tmp_contr_mono_sum = contrib_monograph_sum
-            if is_mono:
-                tmp_contr_mono_sum += pub_contrib
-
-            if self.__check_limits(tmp_contr_sum, tmp_contr_mono_sum, is_mono, pts):
-                best_publications.append(pub)
-                contrib_sum = tmp_contr_sum
-                contrib_monograph_sum = tmp_contr_mono_sum
-
-        return best_publications
-
-    def __get_sorted_publications(self, filter_fun = lambda x: True):
-        selected_pubs = list(filter(lambda x: filter_fun(x), self.publications))
-        return sorted(selected_pubs, key=lambda pub: pub.get_rate(), reverse=True)
+    def __check_if_publication_is_on_publications_list(self, pub: Publication):
+        if pub not in self.publications:
+            raise AttributeError(f"Publication {pub} not in publications list")
 
     def __update_contribution(contribution: float):
         if contribution < MIN_CONTRIBUTION:
@@ -139,21 +53,6 @@ class Author:
             return MAX_CONTRIBUTION
         else:
             return contribution
-
-    def count_sum_of_publications_to_considerate(self):
-        self.__check_if_to_considerate_list_is_not_none()
-        pub_sum = 0
-        for pub in self.to_considerate:
-            pub_sum += pub.get_points()
-        return pub_sum
-
-    def create_publications_ranking(self):
-        self.__check_if_publications_are_loaded()
-
-        rated_pubs = self.__get_sorted_publications()
-        self.to_considerate = self.__choose_best_publications(rated_pubs)
-
-        return self.to_considerate
 
     def get_contribution(self):
         return self.contribution
@@ -164,30 +63,6 @@ class Author:
     def get_publications(self):
         self.__check_if_publications_are_loaded()
         return self.publications
-
-    def get_publications_num(self):
-        return len(self.publications)
-
-    def get_publications_to_considerate(self):
-        return self.to_considerate
-
-    def get_number_of_publications_to_considerate(self):
-        self.__check_if_to_considerate_list_is_not_none()
-        return len(self.to_considerate)
-
-    def get_sum_of_publications_to_considerate(self):
-        self.__check_if_to_considerate_list_is_not_none()
-
-        if self.__publications_to_considerate_sum is None:
-            self.__publications_to_considerate_sum = (
-                self.count_sum_of_publications_to_considerate()
-            )
-
-        return self.__publications_to_considerate_sum
-
-    def get_average_pub_points(self):
-        self.__check_if_to_considerate_list_is_not_empty()
-        return self.get_sum_of_publications_to_considerate() / len(self.to_considerate)
 
     def get_rate(self):
         self.__check_if_rate_is_set()
@@ -202,15 +77,74 @@ class Author:
     def is_in_n(self):
         return self.in_n
 
+    def set_rate(self, new_rate: float):
+        self.rate = new_rate
+
     def load_publications(self, publications) -> None:
+        # TODO: reset
         result = []
         for pub in publications:
             if pub.get_points() > 0 and pub.get_contribution() > 0:
                 pub.set_author(self)
                 result.append(pub)
 
-        self.accepted_publications = list(filter(lambda x: x.is_accepted(), result))
+        publications_to_accept = list(filter(lambda x: x.is_accepted(), result))
         self.publications = result
 
-    def set_rate(self, new_rate: float):
-        self.rate = new_rate
+        for pub in publications_to_accept:
+            if not self.accept_publication(pub):
+                pub.set_is_accepted(False)
+
+    def get_pubs_to_considerate(self):
+        pubs = list(
+            filter(lambda x: x not in self.accepted_publications, self.publications)
+        )
+        return pubs
+
+    def get_accepted_publications(self):
+        return self.accepted_publications
+
+    def __check_limits(self, pub: Publication) -> bool:
+        if self.is_emp:
+            if not self.__check_publications_limit(pub):
+                return False
+            if not self.__check_moographs_limit(pub):
+                return False
+        if not self.__check_limits_for_phd_students(pub):
+            return False
+        return True
+
+    def __check_moographs_limit(self, pub: Publication) -> bool:
+        tmp_mons_contrib = self.__accepted_mons_contrib_sum + pub.get_contribution()
+        if self.is_phd:
+            return True
+        elif not pub.is_monograph():
+            return True
+        elif tmp_mons_contrib <= MONOGRAPH_COEFFICIENT * self.contribution:
+            return True
+        elif pub.ge_points() > MONOGRAPH_LIMIT_MAX_POINTS:
+            return True
+        return False
+
+    def __check_publications_limit(self, pub: Publication) -> bool:
+        tmp_contrib = self.__accepted_pubs_contrib_sum + pub.get_contribution()
+        return tmp_contrib <= PUBLICATIONS_COEFFICIENT * self.contribution
+
+    def __check_limits_for_phd_students(self, pub: Publication) -> bool:
+        tmp_contrib = self.__accepted_pubs_contrib_sum + pub.get_contribution()
+        if not self.is_phd:
+            return True
+        elif tmp_contrib_sum <= PUBLICATIONS_COEFFICIENT_FOR_PHD:
+            return True
+        return False
+
+    def accept_publication(self, pub: Publication) -> bool:
+        self.__check_if_publication_is_on_publications_list(pub)
+        if pub not in self.accepted_publications and self.__check_limits(pub):
+            self.accepted_publications.append(pub)
+            pub.set_is_accepted(True)
+            self.__accepted_pubs_contrib_sum += pub.get_contribution()
+            if pub.is_monograph():
+                self.__accepted_mons_contrib_sum += pub.get_contribution()
+            return True
+        return False

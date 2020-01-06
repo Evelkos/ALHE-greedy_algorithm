@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import Any, List
 
 
 def compare_lists(list1: List[Any], list2: List[Any]):

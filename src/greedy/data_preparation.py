@@ -1,12 +1,15 @@
 from typing import Any, List
+
 import numpy as np
 
 from src.greedy.author import Author
-from src.greedy.publication import Publication
 from src.greedy.output_converter import get_empty_vector, get_idx_map
+from src.greedy.publication import Publication
 from src.greedy.settings import (
     AUTHOR_ID,
     CONTRIBUTION,
+    EMPLOYEES_NUM,
+    INITIAL_PUBS,
     IS_EMPLOYEE,
     IS_IN_N,
     IS_MONOGRAPH,
@@ -14,9 +17,7 @@ from src.greedy.settings import (
     PUBLICATION_CONTRIB_FOR_AUTHOR,
     PUBLICATION_ID,
     PUBLICATION_POINTS_FOR_AUTHOR,
-    EMPLOYEES_NUM,
     PUBLICATIONS_NUM,
-    INITIAL_PUBS,
 )
 
 
@@ -88,7 +89,11 @@ def prepare_authors(data: dict) -> List[Author]:
 
 
 def create_publications_list(
-    pubs: List[str], mons: List[int], points: List[float], contribs: List[float], init: List[int] = None
+    pubs: List[str],
+    mons: List[int],
+    points: List[float],
+    contribs: List[float],
+    init: List[int] = None,
 ):
     """
     Creates publications list for single author.
@@ -120,7 +125,7 @@ def create_publications_list(
             ini = False if ini == 0 else True
             result.append(Publication(pub_id, is_mon, pts, contrib, None, ini))
 
-    return result      
+    return result
 
 
 def prepare_publications(authors: List[Author], data: dict) -> None:
@@ -151,6 +156,7 @@ def prepare_publications(authors: List[Author], data: dict) -> None:
         init = data[INITIAL_PUBS][idx]
         pubs = create_publications_list(pubs_ids, mons, auth_pubs, auth_contrs, init)
         author.load_publications(pubs)
+
     return authors
 
 
@@ -245,7 +251,9 @@ def shuffle_pubs(pubs: List[Publication]) -> List[Publication]:
     return pubs
 
 
-def get_initial_publications(mode: int, data: dict, auth_pubs_num: int = None) -> List[List[int]]:
+def get_initial_publications(
+    mode: int, data: dict, auth_pubs_num: int = None
+) -> List[List[int]]:
     """
     Prepares initial publications list according to choosen mode.
 
@@ -305,9 +313,6 @@ def prepare_authors_and_their_publications(data: dict) -> None:
     """
     authors = prepare_authors(data)
     prepare_publications(authors, data)
-
-    for author in authors:
-        author.create_publications_ranking()
 
     return authors
 

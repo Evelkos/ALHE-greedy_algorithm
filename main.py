@@ -1,11 +1,12 @@
 from src.greedy.greedy import run_algorithm, load_data
-from src.greedy.settings import FILEPATH, DIRPATH, DIGITAL_VARIABLES, LIST_VARIABLES, NESTED_LIST_VARIABLES, STRING_LIST_VARIIABLES, INITIAL_PUBS
+from src.greedy.settings import FILEPATH, DIRPATH, DIGITAL_VARIABLES, LIST_VARIABLES, NESTED_LIST_VARIABLES, STRING_LIST_VARIIABLES, INITIAL_PUBS, PUBLICATIONS_NUM
 from src.greedy.output_converter import convert_dictionary_to_vector
 from src.greedy.publication import Publication
 from src.greedy.data_preparation import normalize_data, get_initial_publications
 from typing import List
 import os
 import json
+import numpy as np
 
 
 def get_result_path(input_path: str):
@@ -42,9 +43,7 @@ if __name__ == "__main__":
         best_h = 0
         best_goal = 0
 
-
-        for i in range(40, 41):
-        # try:
+        try:
             if not os.path.isfile(filepath):
                 raise FileNotFoundError(f"Datafile {filepath} not found")
 
@@ -59,41 +58,41 @@ if __name__ == "__main__":
                 STRING_LIST_VARIIABLES,
             )
             data = normalize_data(data)
-            mode = 3
+            mode = 0
             auth_pubs_num = 2
+
+            heuristic_len = int(data[PUBLICATIONS_NUM] * 0.8)
+
             data[INITIAL_PUBS] = get_initial_publications(mode, data, auth_pubs_num)
 
-            publications, goal_function = run_algorithm(data, i)
+            publications, goal_function = run_algorithm(data, heuristic_len)
             result_publications = convert_publications_to_dictionary(publications)
             result = {
                 "publications": result_publications,
                 "goal_function": goal_function,
             }
             print(goal_function)
+            # result_vector = convert_dictionary_to_vector(result_publications, data)
+            # path = get_result_path(filepath)
 
-        #     result_vector = convert_dictionary_to_vector(result_publications, data)
+            # if(goal_function > best_goal):
+            #     best_goal = goal_function
+            #     best_h = i
+            #     with open(path, "w") as file:
+            #         file.write(f"vector = {result_vector};")
+            #         file.write("\n")
+            #         file.write("\n")
+            #         file.write(f"goal_function = {goal_function};")
 
-        #     path = get_result_path(filepath)
+            #     best_goal = goal_function
+            #     best_h = i
+            # with open(path, "a") as file:
+            #     file.write(f"heuristic_publications_number = {i}")
+            #     file.write("\n")
+            #     file.write(f"goal_function = {goal_function};")
+            #     file.write("\n")
+            #     file.write("\n")
 
-        #     print(goal_function)
-        #     # if(goal_function > best_goal):
-        #     #     best_goal = goal_function
-        #     #     best_h = i
-        #     #     with open(path, "w") as file:
-        #     #         file.write(f"vector = {result_vector};")
-        #     #         file.write("\n")
-        #     #         file.write("\n")
-        #     #         file.write(f"goal_function = {goal_function};")
-
-        #         # best_goal = goal_function
-        #         # best_h = i
-        #     # with open(path, "a") as file:
-        #     #     file.write(f"heuristic_publications_number = {i}")
-        #     #     file.write("\n")
-        #     #     file.write(f"goal_function = {goal_function};")
-        #     #     file.write("\n")
-        #     #     file.write("\n")
-
-        # # except Exception as e:
-        # #     print(e)
-        # #     continue
+        except Exception as e:
+            print(e)
+            continue

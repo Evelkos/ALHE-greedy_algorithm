@@ -64,6 +64,9 @@ class Author:
         self.__check_if_publications_are_loaded()
         return self.publications
 
+    def get_publications_number(self):
+        return len(self.publications)
+
     def get_rate(self):
         self.__check_if_rate_is_set()
         return self.rate
@@ -122,7 +125,7 @@ class Author:
             return True
         elif tmp_mons_contrib <= MONOGRAPH_COEFFICIENT * self.contribution:
             return True
-        elif pub.ge_points() > MONOGRAPH_LIMIT_MAX_POINTS:
+        elif pub.get_points() > MONOGRAPH_LIMIT_MAX_POINTS:
             return True
         return False
 
@@ -148,3 +151,10 @@ class Author:
                 self.__accepted_mons_contrib_sum += pub.get_contribution()
             return True
         return False
+
+    def remove_from_accepted_publications(self, pub) -> None:
+        pub.set_is_accepted(False)
+        self.__accepted_pubs_contrib_sum -= pub.get_contribution()
+        if pub.is_monograph():
+            self.__accepted_mons_contrib_sum -= pub.get_contribution()
+        self.accepted_publications.remove(pub)

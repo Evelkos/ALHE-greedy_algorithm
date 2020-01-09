@@ -9,11 +9,11 @@ import json
 import numpy as np
 
 
-def get_result_path(input_path: str):
+def get_result_path(input_path: str, idx: int):
     path = input_path.split("/")
     filename = path[len(path) - 1].split(("-"))[0]
     path[len(path) - 1] = "results"
-    path.append(f"{filename}.txt")
+    path.append(f"{filename}_{idx}.txt")
 
     return f"/{os.path.join(*path)}"
 
@@ -35,6 +35,19 @@ def convert_publications_to_dictionary(publications: List[Publication]) -> dir:
     return result_publications
 
 
+def save_results(path: str, data: dir, goal: float, vec: List[List[int]]) -> None:
+    with open(path, "w") as f:
+        tmp_goals = data["threshold_goal_values"]
+        for threshold in tmp_goals:
+            f.write(f"threshold_{threshold} = {tmp_goals[threshold]};")
+            f.write("\n")
+        f.write("\n")
+        f.write(f"final_goal_function = {goal};")
+        f.write("\n")
+        f.write("\n")
+        f.write(f"vector = {vec};")
+
+
 if __name__ == "__main__":
     # files = get_list_of_input_files_from_dir(DIRPATH)
     files = [FILEPATH]
@@ -42,57 +55,46 @@ if __name__ == "__main__":
     for filepath in files:
         best_h = 0
         best_goal = 0
+        best_pubs = []
 
-        try:
+        for heuristic_coord in [0.8]:
+            print(f"{heuristic_coord}:")
+            points = 0
+            # try:
             if not os.path.isfile(filepath):
                 raise FileNotFoundError(f"Datafile {filepath} not found")
 
             with open(filepath, "r") as file:
                 data = file.read()
 
-            data = load_data(
+            data = normalize_data(load_data(
                 data,
                 DIGITAL_VARIABLES,
                 LIST_VARIABLES,
                 NESTED_LIST_VARIABLES,
                 STRING_LIST_VARIIABLES,
-            )
-            data = normalize_data(data)
-            mode = 0
-            auth_pubs_num = 2
+            ))
 
-            heuristic_len = int(data[PUBLICATIONS_NUM] * 0.8)
+            X = 30
+            max_p = 0
+            for test_num in range(0, X):
+                mode = 0
+                auth_pubs_num = 2
+                data[INITIAL_PUBS] = get_initial_publications(mode, data, auth_pubs_num)
 
-            data[INITIAL_PUBS] = get_initial_publications(mode, data, auth_pubs_num)
+                heuristic_len = int(data[PUBLICATIONS_NUM] * heuristic_coord)
 
-            publications, goal_function = run_algorithm(data, heuristic_len)
-            result_publications = convert_publications_to_dictionary(publications)
-            result = {
-                "publications": result_publications,
-                "goal_function": goal_function,
-            }
-            print(goal_function)
-            # result_vector = convert_dictionary_to_vector(result_publications, data)
-            # path = get_result_path(filepath)
+                publications, goal_function = run_algorithm(data, heuristic_len)
+                result_publications = convert_publications_to_dictionary(publications)
+                result_vector = convert_dictionary_to_vector(result_publications, data)
+                points += goal_function
+                max_p = max(max_p, goal_function)
+                print(goal_function)
 
-            # if(goal_function > best_goal):
-            #     best_goal = goal_function
-            #     best_h = i
-            #     with open(path, "w") as file:
-            #         file.write(f"vector = {result_vector};")
-            #         file.write("\n")
-            #         file.write("\n")
-            #         file.write(f"goal_function = {goal_function};")
-
-            #     best_goal = goal_function
-            #     best_h = i
-            # with open(path, "a") as file:
-            #     file.write(f"heuristic_publications_number = {i}")
-            #     file.write("\n")
-            #     file.write(f"goal_function = {goal_function};")
-            #     file.write("\n")
-            #     file.write("\n")
-
-        except Exception as e:
-            print(e)
-            continue
+                # path = get_result_path(filepath, test_num)
+                # save_results(path, data, goal_function, result_vector)
+            print(f"mean = {points / X}")
+            print(f"max = {max_p}")
+            # except Exception as e:
+            #     print(e)
+            #     continue

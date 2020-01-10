@@ -163,6 +163,11 @@ def get_points_from_pub(pubs: List[Pub], idx: int) -> float:
     return 0
 
 
+def count_goal_function(prev_goal_fun: float, points: float, data: dict) -> float:
+    update_iterations_info(data)
+    return prev_goal_fun + points
+
+
 def choose_publications_to_publish(
     pubs: List[Pub], accepted: List[Pub], data: dict, heur_pubs: int
 ) -> Tuple[List[Pub], float]:
@@ -253,7 +258,8 @@ def count_auth_pub_pairs_num(authors: List[Author]) -> int:
     return auth_pub_pairs_num
 
 
-def update_iterations_info(data: dict, goal_fun: float) -> None:
+def update_iterations_info(data: dict) -> None:
+    goal_fun = data["best_result"]["goal_fun"]
     data["goal_calculations_num"] += 1
     if data["goal_calculations_num"] in data["thresholds"]:
         curr_th = data["goal_calculations_num"]
@@ -284,10 +290,10 @@ def run_algorithm(data: dict, heur_pubs: int) -> Tuple[List[Pub], float]:
     auths = prepare_authors_and_their_publications(data)
     auth_pub_pairs_num = count_auth_pub_pairs_num(auths)
     data["goal_calculations_num"] = 0
-    data["thresholds"] = [i * auth_pub_pairs_num for i in [1, 10, 100, 1000]]
+    data["thresholds"] = [i * auth_pub_pairs_num for i in [1, 10, 100]]
     data["threshold_goal_values"] = {}
 
-    best_result = {"res_pubs": [], "goal_fun": 0}
+    data["best_result"] = {"res_pubs": [], "goal_fun": 0}
 
     alpha = 0.5
     while data["goal_calculations_num"] < max(data["thresholds"]):
@@ -295,19 +301,19 @@ def run_algorithm(data: dict, heur_pubs: int) -> Tuple[List[Pub], float]:
         acc = get_all_accepted_publications(auths)
         res_pubs, goal_fun = choose_publications_to_publish(pubs, acc, data, heur_pubs)
 
-        if best_result["goal_fun"] < goal_fun:
-            best_result["goal_fun"] = goal_fun
-            best_result["res_pubs"] = res_pubs.copy()
+        if data["best_result"]["goal_fun"] < goal_fun:
+            data["best_result"]["goal_fun"] = goal_fun
+            data["best_result"]["res_pubs"] = res_pubs.copy()
 
-        update_iterations_info(data, best_result["goal_fun"])
+        update_iterations_info(data)
 
         to_cancel = choose_publications_to_cancel(res_pubs, alpha)
         for pub in to_cancel:
             pub.get_author().remove_from_accepted_publications(pub)
 
-    curr_sums = count_curr_sums_for_publications(best_result["res_pubs"])
+    curr_sums = count_curr_sums_for_publications(data["best_result"]["res_pubs"])
     assert check_limits(data, curr_sums)
     for author in auths:
         assert check_author_limits(author, author.get_accepted_publications())
 
-    return best_result["res_pubs"], best_result["goal_fun"]
+    return data["best_result"]["res_pubs"], data["best_result"]["goal_fun"]

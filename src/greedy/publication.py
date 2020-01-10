@@ -10,7 +10,7 @@ class Publication:
     ):
         self.id = publication_id
         self.is_mono = is_mono
-        self.points = round(points, 3)
+        self.points = points
         self.contribution = contribution
         self.author = author
         self.accepted = accepted
@@ -42,7 +42,7 @@ class Publication:
         return self.id
 
     def get_points(self):
-        return round(self.points, 3)
+        return self.points
 
     def get_rate(self):
         return self.points / self.contribution

@@ -7,27 +7,10 @@ from src.greedy.check_limits import (
     check_limits,
     count_curr_sums_for_publications,
 )
-from src.greedy.data_loader import load_data
-from src.greedy.data_preparation import (
-    prepare_authors_and_their_publications,
-    set_rate_for_authors,
-    sort_authors,
-)
+from src.greedy.data_preparation import prepare_authors_and_their_publications
 from src.greedy.publication import Publication as Pub
-from src.greedy.settings import (
-    DIGITAL_VARIABLES,
-    EMPLOYEES_NUM,
-    FILEPATH,
-    HEURISTIC_AUTHORS_LIST_LEN,
-    LIST_VARIABLES,
-    N0,
-    N1,
-    N2,
-    NESTED_LIST_VARIABLES,
-    STRING_LIST_VARIIABLES,
-)
 from src.greedy.data_preparation import shuffle_pubs
-import pdb
+
 
 def consider_single_publication(pub: Pub, curr_sums: dict, data: dict) -> bool:
     """
@@ -171,23 +154,13 @@ def get_heuristic_value(pubs: List[Pub], idx: int, remaining_pubs: int) -> float
         heur += pub.get_points()
         curr_pubs += 1
 
-    return round(heur, 3)
+    return heur
 
 
 def get_points_from_pub(pubs: List[Pub], idx: int) -> float:
     if len(pubs) > idx:
-        return round(pubs[idx].get_points(), 3)
+        return pubs[idx].get_points()
     return 0
-
-
-def count_goal_fun(goal_function, points, data):
-    """
-    Counts new value of goal function and saves it when number of iterations meeds 
-    one of thresholds
-    """
-    new_goal_fun = goal_function + points
-
-    return new_goal_fun
 
 
 def choose_publications_to_publish(
@@ -206,7 +179,6 @@ def choose_publications_to_publish(
         list of publications to publish and value of goal function
 
     """
-    publications_to_publish = []
     curr_sums = {"contrib_sum": 0, "monograph_sum": 0, "phd_and_outsiders": 0}
     goal_function = 0
 
@@ -215,56 +187,43 @@ def choose_publications_to_publish(
     for pub in accepted:
         if consider_single_publication(pub, curr_sums, data):
             curr_sums = update_current_sums(curr_sums, pub, pub.get_author())
-            goal_function = goal_function + pub.get_points()
+            goal_function += pub.get_points()
             result_publications.append(pub)
             heur_pubs -= 1
 
-    heuristic_value_2 = get_heuristic_value(pubs, 0, heur_pubs)
-    goal_function_2 = goal_function + 0
+    heuristic_value = get_heuristic_value(pubs, 0, heur_pubs)
 
     for idx, pub in enumerate(pubs, 0):
+        heuristic_value = round(heuristic_value, 3)
         if consider_single_publication(pub, curr_sums, data):
-            heu_pub_2 = round(heuristic_value_2 - pub.get_points(), 3)
-            heu_without_pub_2 = round(heuristic_value_2 - pub.get_points(), 3)
-
+            heu_pub = heuristic_value - pub.get_points()
+            heu_without_pub = heuristic_value - pub.get_points()
             if heur_pubs > 0:
-                heu_without_pub_2 += get_points_from_pub(pubs, idx + heur_pubs)
+                heu_without_pub += get_points_from_pub(pubs, idx + heur_pubs)
 
-            if heu_pub_2 < 0:
-                heu_pub_2 = 0
-            if heu_without_pub_2 < 0:
-                heu_without_pub_2 = 0
-
-            tmp_goal_function = count_goal_fun(goal_function, pub.get_points(), data)
-            tmp_goal_function_2 = goal_function_2 + heu_pub_2
-
-            heu_pub = heu_pub_2
-            heu_without_pub = heu_without_pub_2
+            heu_pub = heu_pub if heu_pub >= 0 else 0
+            heu_without_pub = heu_without_pub if heu_without_pub >= 0 else 0
+            tmp_goal_function = goal_function + pub.get_points()
 
             if tmp_goal_function + heu_pub > goal_function + heu_without_pub:
                 if pub.get_author().accept_publication(pub):
                     goal_function = tmp_goal_function
-                    goal_function_2 = tmp_goal_function_2
                     heuristic_value = heu_pub
-                    heuristic_value_2 = heu_pub_2
-
                     heur_pubs -= 1
                     curr_sums = update_current_sums(curr_sums, pub, pub.get_author())
                     result_publications.append(pub)
                 else:
-                    heuristic_value_2 -= pub.get_points()
+                    heuristic_value -= pub.get_points()
                     if heur_pubs > 0:
-                        heuristic_value_2 += get_points_from_pub(pubs, idx + heur_pubs)
+                        heuristic_value += get_points_from_pub(pubs, idx + heur_pubs)
             else:
                 heuristic_value = heu_without_pub
-                heuristic_value_2 = heu_without_pub_2
-
         else:
-            heuristic_value_2 -= pub.get_points()
+            heuristic_value -= pub.get_points()
             if heur_pubs > 0:
-                heuristic_value_2 += get_points_from_pub(pubs, idx + heur_pubs)
+                heuristic_value += get_points_from_pub(pubs, idx + heur_pubs)
 
-    return result_publications, goal_function
+    return result_publications, round(goal_function, 3)
 
 
 def choose_publications_to_cancel(accepted: List[Pub], alpha: float) -> List[Pub]:
@@ -281,7 +240,6 @@ def choose_publications_to_cancel(accepted: List[Pub], alpha: float) -> List[Pub
     return to_cancel
 
 
-
 def count_auth_pub_pairs_num(authors: List[Author]) -> int:
     """
     Counts number of pairs (author, publication),
@@ -295,14 +253,14 @@ def count_auth_pub_pairs_num(authors: List[Author]) -> int:
     return auth_pub_pairs_num
 
 
-def update_iterations_info(data, goal_fun):
+def update_iterations_info(data: dict, goal_fun: float) -> None:
     data["goal_calculations_num"] += 1
     if data["goal_calculations_num"] in data["thresholds"]:
         curr_th = data["goal_calculations_num"]
         if data["threshold_goal_values"] == {}:
             data["threshold_goal_values"][curr_th] = goal_fun
         else:
-            max_th= max(data["threshold_goal_values"])
+            max_th = max(data["threshold_goal_values"])
             if goal_fun > data["threshold_goal_values"][max_th]:
                 data["threshold_goal_values"][curr_th] = goal_fun
             else:
@@ -326,13 +284,12 @@ def run_algorithm(data: dict, heur_pubs: int) -> Tuple[List[Pub], float]:
     auths = prepare_authors_and_their_publications(data)
     auth_pub_pairs_num = count_auth_pub_pairs_num(auths)
     data["goal_calculations_num"] = 0
-    data["thresholds"] = [i * auth_pub_pairs_num for i in [1, 10, 100]]
+    data["thresholds"] = [i * auth_pub_pairs_num for i in [1, 10, 100, 1000]]
     data["threshold_goal_values"] = {}
 
     best_result = {"res_pubs": [], "goal_fun": 0}
 
-    alpha = 0.8
-    i = 0
+    alpha = 0.5
     while data["goal_calculations_num"] < max(data["thresholds"]):
         pubs = shuffle_pubs(get_publications_to_considerate(auths))
         acc = get_all_accepted_publications(auths)

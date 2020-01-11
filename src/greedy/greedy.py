@@ -1,4 +1,5 @@
 from typing import List, Tuple
+
 import numpy as np
 
 from src.greedy.author import Author
@@ -7,9 +8,12 @@ from src.greedy.check_limits import (
     check_limits,
     count_curr_sums_for_publications,
 )
-from src.greedy.data_preparation import prepare_authors_and_their_publications
+from src.greedy.data_preparation import (
+    prepare_authors_and_their_publications,
+    shuffle_pubs,
+)
 from src.greedy.publication import Publication as Pub
-from src.greedy.data_preparation import shuffle_pubs
+from src.greedy.settings import ALPHA, THRESHOLDS
 
 
 def consider_single_publication(pub: Pub, curr_sums: dict, data: dict) -> bool:
@@ -185,14 +189,13 @@ def choose_publications_to_publish(
 
     """
     curr_sums = {"contrib_sum": 0, "monograph_sum": 0, "phd_and_outsiders": 0}
-    goal_function = 0
-
+    goal_fun = 0
     result_publications = []
 
     for pub in accepted:
         if consider_single_publication(pub, curr_sums, data):
             curr_sums = update_current_sums(curr_sums, pub, pub.get_author())
-            goal_function += pub.get_points()
+            goal_fun = count_goal_function(goal_fun, pub.get_points(), data)
             result_publications.append(pub)
             heur_pubs -= 1
 
@@ -200,27 +203,19 @@ def choose_publications_to_publish(
 
     for idx, pub in enumerate(pubs, 0):
         heuristic_value = round(heuristic_value, 3)
+        tmp_goal_fun = count_goal_function(goal_fun, pub.get_points(), data)
         if consider_single_publication(pub, curr_sums, data):
-            heu_pub = heuristic_value - pub.get_points()
-            heu_without_pub = heuristic_value - pub.get_points()
+            heu_pub = max(0, heuristic_value - pub.get_points())
+            heu_without_pub = max(0, heuristic_value - pub.get_points())
             if heur_pubs > 0:
                 heu_without_pub += get_points_from_pub(pubs, idx + heur_pubs)
 
-            heu_pub = heu_pub if heu_pub >= 0 else 0
-            heu_without_pub = heu_without_pub if heu_without_pub >= 0 else 0
-            tmp_goal_function = goal_function + pub.get_points()
-
-            if tmp_goal_function + heu_pub > goal_function + heu_without_pub:
-                if pub.get_author().accept_publication(pub):
-                    goal_function = tmp_goal_function
+            if tmp_goal_fun + heu_pub > goal_fun + heu_without_pub and pub.get_author().accept_publication(pub):
+                    goal_fun = tmp_goal_fun
                     heuristic_value = heu_pub
                     heur_pubs -= 1
                     curr_sums = update_current_sums(curr_sums, pub, pub.get_author())
                     result_publications.append(pub)
-                else:
-                    heuristic_value -= pub.get_points()
-                    if heur_pubs > 0:
-                        heuristic_value += get_points_from_pub(pubs, idx + heur_pubs)
             else:
                 heuristic_value = heu_without_pub
         else:
@@ -228,18 +223,15 @@ def choose_publications_to_publish(
             if heur_pubs > 0:
                 heuristic_value += get_points_from_pub(pubs, idx + heur_pubs)
 
-    return result_publications, round(goal_function, 3)
+    return result_publications, round(goal_fun, 3)
 
 
 def choose_publications_to_cancel(accepted: List[Pub], alpha: float) -> List[Pub]:
-    pubs = sort_publications(accepted)
-
     to_cancel = []
 
-    for idx, pub in enumerate(pubs, 1):
+    for pub in sort_publications(accepted):
         cancel_prob = np.random.uniform(0, 1)
-        threshold = alpha
-        if cancel_prob <= threshold:
+        if cancel_prob <= alpha:
             to_cancel.append(pub)
 
     return to_cancel
@@ -259,9 +251,8 @@ def count_auth_pub_pairs_num(authors: List[Author]) -> int:
 
 
 def update_iterations_info(data: dict) -> None:
-    goal_fun = data["best_result"]["goal_fun"]
-    data["goal_calculations_num"] += 1
     if data["goal_calculations_num"] in data["thresholds"]:
+        goal_fun = data["best_result"]["goal_fun"]
         curr_th = data["goal_calculations_num"]
         if data["threshold_goal_values"] == {}:
             data["threshold_goal_values"][curr_th] = goal_fun
@@ -270,7 +261,15 @@ def update_iterations_info(data: dict) -> None:
             if goal_fun > data["threshold_goal_values"][max_th]:
                 data["threshold_goal_values"][curr_th] = goal_fun
             else:
-                data["threshold_goal_values"][curr_th] = data["threshold_goal_values"][max_th]
+                max_goal = data["threshold_goal_values"][max_th]
+                data["threshold_goal_values"][curr_th] = max_goal
+    data["goal_calculations_num"] += 1
+
+
+def update_best_result(data: dict, res_pubs: List[Pub], goal_fun) -> None:
+    if data["best_result"]["goal_fun"] < goal_fun:
+        data["best_result"]["goal_fun"] = goal_fun
+        data["best_result"]["res_pubs"] = res_pubs.copy()
 
 
 def run_algorithm(data: dict, heur_pubs: int) -> Tuple[List[Pub], float]:
@@ -289,26 +288,17 @@ def run_algorithm(data: dict, heur_pubs: int) -> Tuple[List[Pub], float]:
 
     auths = prepare_authors_and_their_publications(data)
     auth_pub_pairs_num = count_auth_pub_pairs_num(auths)
-    data["goal_calculations_num"] = 0
-    data["thresholds"] = [i * auth_pub_pairs_num for i in [1, 10, 100]]
-    data["threshold_goal_values"] = {}
+    data["thresholds"] = [i * auth_pub_pairs_num for i in THRESHOLDS]
 
-    data["best_result"] = {"res_pubs": [], "goal_fun": 0}
-
-    alpha = 0.5
-    while data["goal_calculations_num"] < max(data["thresholds"]):
-        pubs = shuffle_pubs(get_publications_to_considerate(auths))
+    while data["goal_calculations_num"] < max(data["thresholds"]) + 1:
+        pubs = sort_publications(get_publications_to_considerate(auths))
         acc = get_all_accepted_publications(auths)
         res_pubs, goal_fun = choose_publications_to_publish(pubs, acc, data, heur_pubs)
 
-        if data["best_result"]["goal_fun"] < goal_fun:
-            data["best_result"]["goal_fun"] = goal_fun
-            data["best_result"]["res_pubs"] = res_pubs.copy()
+        update_best_result(data, res_pubs, goal_fun)
+        # update_iterations_info(data)
 
-        update_iterations_info(data)
-
-        to_cancel = choose_publications_to_cancel(res_pubs, alpha)
-        for pub in to_cancel:
+        for pub in choose_publications_to_cancel(res_pubs, ALPHA):
             pub.get_author().remove_from_accepted_publications(pub)
 
     curr_sums = count_curr_sums_for_publications(data["best_result"]["res_pubs"])

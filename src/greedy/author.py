@@ -1,5 +1,3 @@
-from typing import Any, List
-
 from src.greedy.publication import Publication
 from src.greedy.tools import compare_lists
 
@@ -137,7 +135,7 @@ class Author:
         tmp_contrib = self.__accepted_pubs_contrib_sum + pub.get_contribution()
         if not self.is_phd:
             return True
-        elif tmp_contrib_sum <= PUBLICATIONS_COEFFICIENT_FOR_PHD:
+        elif tmp_contrib <= PUBLICATIONS_COEFFICIENT_FOR_PHD:
             return True
         return False
 

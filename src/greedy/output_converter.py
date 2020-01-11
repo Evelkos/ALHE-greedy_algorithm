@@ -42,7 +42,7 @@ def get_idx_map(data: dict, key: str) -> dict:
 
 def convert_dictionary_to_vector(pubs_auths: dict, data: dict) -> List[List[int]]:
     """
-    Converts dictionary returned 
+    Converts dictionary returned
 
     Args:
         pubs_auths: contains information about accepted publications and authors

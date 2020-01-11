@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import List
 
 import numpy as np
 
@@ -138,7 +138,7 @@ def prepare_publications(authors: List[Author], data: dict) -> None:
         data: dictionary with keys:
             PUBLICATION_ID: list of publications' ids
             IS_MONOGRAPH: list that defines which publications are monographs
-            PUBLICATION_POINTS_FOR_AUTHOR: list of lists. Each list contains 
+            PUBLICATION_POINTS_FOR_AUTHOR: list of lists. Each list contains
                 publications' points for single author
             PUBLICATION_CONTRIB_FOR_AUTHOR: list of lists. Each list contains
                 publications' contributions for single author
@@ -294,7 +294,7 @@ def prepare_authors_and_their_publications(data: dict) -> None:
         data: dictionary with keys:
             PUBLICATION_ID: list of publications' ids
             IS_MONOGRAPH: list that defines which publications are monographs
-            PUBLICATION_POINTS_FOR_AUTHOR: list of lists. Each list contains 
+            PUBLICATION_POINTS_FOR_AUTHOR: list of lists. Each list contains
                 publications' points for single author
             PUBLICATION_CONTRIB_FOR_AUTHOR: list of lists. Each list contains
                 publications' contributions for single author

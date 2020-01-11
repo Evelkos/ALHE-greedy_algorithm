@@ -23,24 +23,21 @@ from src.greedy.settings import (
 def get_result_path(input_path: str, mode: int, idx: int, test_try: int) -> str:
     path = input_path.split("/")
     filename = path[len(path) - 1].split(("-"))[0]
-    # print(filename)
     path[len(path) - 1] = "results"
-    # path.append(filename)
 
     path = os.path.join("/", *path)
     path = os.path.join(path, filename)
     if not os.path.exists(path):
         os.mkdir(path)
-    # path.append(f"{filename}_{mode}_{idx}_{test_try}.txt")
 
     return os.path.join(path, f"{filename}_{mode}_{idx}_{test_try}.txt")
 
 
 def get_list_of_input_files_from_dir(dirpath: str):
     files = []
-    for file in os.listdir(DIRPATH):
+    for file in os.listdir(dirpath):
         if file.endswith(".txt"):
-            files.append(os.path.join(DIRPATH, file))
+            files.append(os.path.join(dirpath, file))
     return files
 
 

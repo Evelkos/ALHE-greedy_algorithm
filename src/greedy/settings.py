@@ -28,14 +28,21 @@ STRING_LIST_VARIIABLES = [AUTHOR_ID, PUBLICATION_ID]
 # Additional key in data directory: included publications
 INITIAL_PUBS = "included_publications"
 
+# number of full iterations after which results will be stored
 THRESHOLDS = [1, 10, 100, 1000]
+
+# probability of publication's revocation
 ALPHA = 0.5
+
+# Heuristic coefficient
+# length of result publications = HEURISTIC_RESULT_PUBS_LEN * length of publications
 HEURISTIC_RESULT_PUBS_LEN = 0.8
 
-# Path to the file with data
-# inzynieria_biomedyczna-input.txt - BLAD
-FILEPATH = "/home/ewelina/Studia/Semestr 7/ALHE/Projekt/ALHE-greedy_algorithm/data/filozofia-input.txt"
-# FILEPATH = "/home/ewelina/Studia/Semestr 7/ALHE/Projekt/ALHE-greedy_algorithm/data/inzynieria_ladowa_transport-input.txt"
-DIRPATH = "/home/ewelina/Studia/Semestr 7/ALHE/Projekt/ALHE-greedy_algorithm/data/"
+# Path to the file with input data (for tests)
+FILEPATH = "data/filozofia-input.txt"
 
-HEURISTIC_AUTHORS_LIST_LEN = 5
+# Path to the directory with input files
+DIRPATH = "data/results/data/"
+
+# Path to the directory where results will be stored
+RESULTS_DIR = "data/results"

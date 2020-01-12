@@ -7,6 +7,8 @@ from src.greedy.settings import (
     PUBLICATIONS_NUM,
 )
 
+from src.greedy.publication import Publication
+
 
 def get_empty_vector(rows: int, columns: int) -> List[List[int]]:
     """
@@ -66,3 +68,28 @@ def convert_dictionary_to_vector(pubs_auths: dict, data: dict) -> List[List[int]
             result[row][column] += 1
 
     return result
+
+
+def convert_publications_to_dictionary(publications: List[Publication]) -> dir:
+    """
+    Converts list of publications to dictionary
+
+    Args:
+        publications: list of publications
+
+    Returns:
+        doctionary with publications' ids as keys and lists of authors as values
+        Ex.
+        {
+            "pub1": ["auth1", "auth2"],
+            "pub2": ["auth3", "auth4"],
+            "pub9": ["auth3"],
+        }
+    """
+    result_publications = {}
+    for pub in publications:
+        if not pub.get_id() in result_publications:
+            result_publications.update({pub.get_id(): [pub.get_author().get_id()]})
+        else:
+            result_publications[pub.get_id()].append(pub.get_author().get_id())
+    return result_publications

@@ -29,7 +29,7 @@ STRING_LIST_VARIIABLES = [AUTHOR_ID, PUBLICATION_ID]
 INITIAL_PUBS = "included_publications"
 
 # number of full iterations after which results will be stored
-THRESHOLDS = [1, 10, 100, 1000]
+THRESHOLDS = [1, 10, 100]
 
 # probability of publication's revocation
 ALPHA = 0.5
@@ -45,10 +45,19 @@ FILEPATH = "data/filozofia-input.txt"
 DIRPATH = "data"
 
 # Path to the directory where results will be stored
-RESULTS_DIR = "data/results/final"
+RESULTS_DIR = "data/results"
+
+# Path to the directory where results will be stored
+PLOT_DATA = "data/results/ALHE_wszystkie_limity_sortowanie"
 
 # Suffix of thresholds saved in results file
 THRESHOLDS_SUFFIX = "threshold_"
 
 # Directory to store images
 RESULTS_IMAGES_DIR = "data/results/images"
+
+# summaries file
+SUMMARIES_FILE = "data/results/summaries.txt"
+
+# final value of goal function stored in result file
+FINAL_GOAL_FUN = "final_goal_function"

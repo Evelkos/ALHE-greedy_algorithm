@@ -296,7 +296,6 @@ def run_algorithm(data: dict, heur_pubs: int) -> Tuple[List[Pub], float]:
         res_pubs, goal_fun = choose_publications_to_publish(pubs, acc, data, heur_pubs)
 
         update_best_result(data, res_pubs, goal_fun)
-        # update_iterations_info(data)
 
         for pub in choose_publications_to_cancel(res_pubs, ALPHA):
             pub.get_author().remove_from_accepted_publications(pub)

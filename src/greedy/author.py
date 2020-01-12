@@ -106,14 +106,15 @@ class Author:
         return self.accepted_publications
 
     def __check_limits(self, pub: Publication) -> bool:
-        if self.is_emp:
-            if not self.__check_publications_limit(pub):
-                return False
-            if not self.__check_moographs_limit(pub):
-                return False
-        if not self.__check_limits_for_phd_students(pub):
-            return False
-        return True
+        return self.__accepted_pubs_contrib_sum + pub.get_contribution() <= 4
+        # if self.is_emp:
+        #     if not self.__check_publications_limit(pub):
+        #         return False
+        #     if not self.__check_moographs_limit(pub):
+        #         return False
+        # if not self.__check_limits_for_phd_students(pub):
+        #     return False
+        # return True
 
     def __check_moographs_limit(self, pub: Publication) -> bool:
         tmp_mons_contrib = self.__accepted_mons_contrib_sum + pub.get_contribution()

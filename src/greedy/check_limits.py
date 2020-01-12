@@ -23,34 +23,45 @@ def check_phd_students_and_outsiders(data: dict, phd_and_outsiders: float) -> bo
     return phd_and_outsiders < 0.6 * data[EMPLOYEES_NUM]
 
 
+# def check_limits(data: dict, current_sums: dict):
+#     if not check_publications_number_limit(data, current_sums["contrib_sum"]):
+#         return False
+#     if not check_monographs_number_limit(data, current_sums["monograph_sum"]):
+#         return False
+#     if not check_phd_students_and_outsiders(data, current_sums["phd_and_outsiders"]):
+#         return False
+#     return True
+
 def check_limits(data: dict, current_sums: dict):
-    if not check_publications_number_limit(data, current_sums["contrib_sum"]):
-        return False
-    if not check_monographs_number_limit(data, current_sums["monograph_sum"]):
-        return False
-    if not check_phd_students_and_outsiders(data, current_sums["phd_and_outsiders"]):
-        return False
-    return True
+    if current_sums["contrib_sum"] <= 3 * data[EMPLOYEES_NUM]:
+        return True
+
+# def check_author_limits(auth: Author, publications: List[Publication]):
+#     if auth.is_employee():
+#         publications_sum = 0
+#         for pub in publications:
+#             publications_sum += pub.get_contribution()
+#         assert publications_sum <= auth.get_contribution() * PUBLICATIONS_COEFFICIENT
+
+#     if auth.is_employee() and not auth.is_phd_student():
+#         monograph_sum = 0
+#         for pub in publications:
+#             monograph_sum += pub.get_contribution() if pub.is_monograph() else 0.0
+#         assert monograph_sum <= auth.get_contribution() * MONOGRAPH_COEFFICIENT
+
+#     if auth.is_phd_student():
+#         publications_sum = 0
+#         for pub in publications:
+#             publications_sum += pub.get_contribution()
+#         assert publications_sum <= PUBLICATIONS_COEFFICIENT_FOR_PHD
+#     return True
 
 
 def check_author_limits(auth: Author, publications: List[Publication]):
-    if auth.is_employee():
-        publications_sum = 0
-        for pub in publications:
-            publications_sum += pub.get_contribution()
-        assert publications_sum <= auth.get_contribution() * PUBLICATIONS_COEFFICIENT
-
-    if auth.is_employee() and not auth.is_phd_student():
-        monograph_sum = 0
-        for pub in publications:
-            monograph_sum += pub.get_contribution() if pub.is_monograph() else 0.0
-        assert monograph_sum <= auth.get_contribution() * MONOGRAPH_COEFFICIENT
-
-    if auth.is_phd_student():
-        publications_sum = 0
-        for pub in publications:
-            publications_sum += pub.get_contribution()
-        assert publications_sum <= PUBLICATIONS_COEFFICIENT_FOR_PHD
+    publications_sum = 0
+    for pub in publications:
+        publications_sum += pub.get_contribution()
+    assert publications_sum <= 4.0
     return True
 
 

@@ -42,7 +42,13 @@ HEURISTIC_RESULT_PUBS_LEN = 0.8
 FILEPATH = "data/filozofia-input.txt"
 
 # Path to the directory with input files
-DIRPATH = "data/results/data/"
+DIRPATH = "data"
 
 # Path to the directory where results will be stored
-RESULTS_DIR = "data/results"
+RESULTS_DIR = "data/results/final"
+
+# Suffix of thresholds saved in results file
+THRESHOLDS_SUFFIX = "threshold_"
+
+# Directory to store images
+RESULTS_IMAGES_DIR = "data/results/images"

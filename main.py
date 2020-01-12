@@ -4,6 +4,7 @@ from typing import List
 from src.greedy.data_loader import load_data
 from src.greedy.data_preparation import get_initial_publications, normalize_data
 from src.greedy.greedy import run_algorithm
+from src.greedy.tools import get_list_of_files_from_dir
 from src.greedy.output_converter import (
     convert_dictionary_to_vector,
     convert_publications_to_dictionary,
@@ -20,6 +21,7 @@ from src.greedy.settings import (
     PUBLICATIONS_NUM,
     STRING_LIST_VARIIABLES,
     RESULTS_DIR,
+    THRESHOLDS_SUFFIX,
 )
 
 
@@ -33,19 +35,12 @@ def get_result_path(input_path: str, mode: int, idx: int, test_try: int, results
 
     return os.path.join(single_test_dir, f"{filename}_{mode}_{idx}_{test_try}.txt")
 
-def get_list_of_input_files_from_dir(dirpath: str):
-    files = []
-    for file in os.listdir(dirpath):
-        if file.endswith(".txt"):
-            files.append(os.path.join(dirpath, file))
-    return files
-
 
 def save_results(path: str, data: dir, goal: float, vec: List[List[int]]) -> None:
     with open(path, "w") as f:
         tmp_goals = data["threshold_goal_values"]
         for threshold in tmp_goals:
-            f.write(f"threshold_{threshold} = {tmp_goals[threshold]};")
+            f.write(f"{THRESHOLDS_SUFFIX}{threshold} = {tmp_goals[threshold]};")
             f.write("\n")
         f.write("\n")
         f.write(f"final_goal_function = {goal};")
@@ -86,8 +81,8 @@ def test_algorithm(
 
 
 if __name__ == "__main__":
-    # files = get_list_of_input_files_from_dir(DIRPATH)
-    files = [FILEPATH]
+    files = get_list_of_files_from_dir(DIRPATH, ".txt")
+    # files = [FILEPATH]
 
     for filepath in files:
         print(filepath)

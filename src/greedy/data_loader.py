@@ -23,6 +23,10 @@ def get_list_of_strings_pattern() -> str:
     return r"(\[(\"|\w|-|, )+\])"
 
 
+def get_float_pattern() -> str:
+    return r"([-+]?\d*\.\d+|\d+)"
+
+
 def extract_vars(data: str, list_variables: List[str], pattern: str) -> dict:
     """
     Returns dictionary with variables listed in list_variables. Variables needs to
@@ -71,7 +75,7 @@ def load_data(
     result = {}
 
     if digital_vars:
-        result.update(extract_vars(data, digital_vars, get_int_pattern()))
+        result.update(extract_vars(data, digital_vars, get_float_pattern()))
     if list_vars:
         result.update(extract_vars(data, list_vars, get_list_of_floats_pattern()))
     if nested_list_vars:

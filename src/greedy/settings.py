@@ -29,7 +29,7 @@ STRING_LIST_VARIIABLES = [AUTHOR_ID, PUBLICATION_ID]
 INITIAL_PUBS = "included_publications"
 
 # number of full iterations after which results will be stored
-THRESHOLDS = [1, 10, 100]
+THRESHOLDS = [1, 10, 100, 1000]
 
 # probability of publication's revocation
 ALPHA = 0.5

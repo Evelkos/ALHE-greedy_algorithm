@@ -8,6 +8,8 @@ MIN_CONTRIBUTION = 0.25
 MAX_CONTRIBUTION = 1
 PUBLICATIONS_COEFFICIENT_FOR_PHD = 4
 
+BASIC_CONTRIB_COEFFICIENT = 4
+
 
 class Author:
     def __init__(
@@ -20,7 +22,6 @@ class Author:
         self.contribution = Author.__update_contribution(contrib)
 
         self.publications = []
-        self.rate = None
         self.__publications_to_considerate_sum = None
 
         self.accepted_publications = []
@@ -58,16 +59,8 @@ class Author:
     def get_id(self):
         return self.id
 
-    def get_publications(self):
-        self.__check_if_publications_are_loaded()
-        return self.publications
-
     def get_publications_number(self):
         return len(self.publications)
-
-    def get_rate(self):
-        self.__check_if_rate_is_set()
-        return self.rate
 
     def is_phd_student(self):
         return self.is_phd
@@ -78,11 +71,7 @@ class Author:
     def is_in_n(self):
         return self.in_n
 
-    def set_rate(self, new_rate: float):
-        self.rate = new_rate
-
     def load_publications(self, publications) -> None:
-        # TODO: reset
         result = []
         for pub in publications:
             if pub.get_points() > 0 and pub.get_contribution() > 0:
@@ -106,15 +95,20 @@ class Author:
         return self.accepted_publications
 
     def __check_limits(self, pub: Publication) -> bool:
-        return self.__accepted_pubs_contrib_sum + pub.get_contribution() <= 4
-        # if self.is_emp:
-        #     if not self.__check_publications_limit(pub):
-        #         return False
-        #     if not self.__check_moographs_limit(pub):
-        #         return False
-        # if not self.__check_limits_for_phd_students(pub):
-        #     return False
-        # return True
+        return (
+            self.__accepted_pubs_contrib_sum + pub.get_contribution()
+            <= BASIC_CONTRIB_COEFFICIENT
+        )
+
+    def __check_full_limits(self, pub: Publication) -> bool:
+        if self.is_emp:
+            if not self.__check_publications_limit(pub):
+                return False
+            if not self.__check_moographs_limit(pub):
+                return False
+        if not self.__check_limits_for_phd_students(pub):
+            return False
+        return True
 
     def __check_moographs_limit(self, pub: Publication) -> bool:
         tmp_mons_contrib = self.__accepted_mons_contrib_sum + pub.get_contribution()
@@ -142,6 +136,7 @@ class Author:
 
     def accept_publication(self, pub: Publication) -> bool:
         self.__check_if_publication_is_on_publications_list(pub)
+
         if pub not in self.accepted_publications and self.__check_limits(pub):
             self.accepted_publications.append(pub)
             pub.set_is_accepted(True)

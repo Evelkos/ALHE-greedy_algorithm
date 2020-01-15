@@ -1,7 +1,7 @@
 from src.greedy.data_loader import (
     extract_vars,
     find_data_segment,
-    get_int_pattern,
+    get_float_pattern,
     get_list_of_floats_pattern,
     get_list_of_strings_pattern,
     get_nested_list_pattern,
@@ -10,11 +10,11 @@ from src.greedy.data_loader import (
 
 
 def test_find_data_segment_with_int_pattern():
-    assert find_data_segment("A = 123;", "A", get_int_pattern()) == "123"
+    assert find_data_segment("A = 123;", "A", get_float_pattern()) == "123"
 
 
 def test_find_data_segment_with_int_pattern_and_multiple_variables():
-    assert find_data_segment("A = 88; B = 9;", "B", get_int_pattern()) == "9"
+    assert find_data_segment("A = 88; B = 9;", "B", get_float_pattern()) == "9"
 
 
 def test_find_data_segment_with_list_of_floats_pattern():
@@ -52,7 +52,7 @@ def test_find_data_segment_with_nested_list_pattern_and_multiple_variables():
 
 
 def test_extract_vars_with_int_pattern():
-    assert extract_vars("A = 12;", ["A"], get_int_pattern()) == {"A": 12}
+    assert extract_vars("A = 12;", ["A"], get_float_pattern()) == {"A": 12}
 
 
 def test_extract_vars_with_list_of_floats_pattern():
@@ -75,7 +75,7 @@ def test_extract_vars_with_nested_list_pattern():
 
 def test_extract_vars_with_multiple_variables():
     data = "A = 6; B = 5; C = 4;"
-    pattern = get_int_pattern()
+    pattern = get_float_pattern()
     assert extract_vars(data, ["A", "B"], pattern) == {"A": 6, "B": 5}
 
 

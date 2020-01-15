@@ -8,10 +8,7 @@ from src.greedy.check_limits import (
     check_limits,
     count_curr_sums_for_publications,
 )
-from src.greedy.data_preparation import (
-    prepare_authors_and_their_publications,
-    shuffle_pubs,
-)
+from src.greedy.data_preparation import prepare_authors_and_their_publications
 from src.greedy.publication import Publication as Pub
 from src.greedy.settings import ALPHA, THRESHOLDS
 
@@ -210,12 +207,14 @@ def choose_publications_to_publish(
             if heur_pubs > 0:
                 heu_without_pub += get_points_from_pub(pubs, idx + heur_pubs)
 
-            if tmp_goal_fun + heu_pub > goal_fun + heu_without_pub and pub.get_author().accept_publication(pub):
-                    goal_fun = tmp_goal_fun
-                    heuristic_value = heu_pub
-                    heur_pubs -= 1
-                    curr_sums = update_current_sums(curr_sums, pub, pub.get_author())
-                    result_publications.append(pub)
+            if tmp_goal_fun + heu_pub > goal_fun + heu_without_pub and pub.get_author().accept_publication(
+                pub
+            ):
+                goal_fun = tmp_goal_fun
+                heuristic_value = heu_pub
+                heur_pubs -= 1
+                curr_sums = update_current_sums(curr_sums, pub, pub.get_author())
+                result_publications.append(pub)
             else:
                 heuristic_value = heu_without_pub
         else:

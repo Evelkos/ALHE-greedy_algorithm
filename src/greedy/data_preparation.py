@@ -40,26 +40,6 @@ def normalize_data(data: dict):
     return data
 
 
-def count_author_rate(author: Author) -> float:
-    """
-    Counts single author rate.
-
-    Args:
-        author: single author
-
-    Returns:
-        Author's rate
-
-    """
-    points = author.get_sum_of_publications_to_considerate()
-    num = author.get_number_of_publications_to_considerate()
-
-    if num == 0:
-        return 0
-
-    return points / num
-
-
 def prepare_authors(data: dict) -> List[Author]:
     """
     Prepares list of authors without their publications list
@@ -315,22 +295,3 @@ def prepare_authors_and_their_publications(data: dict) -> None:
     prepare_publications(authors, data)
 
     return authors
-
-
-def set_rate_for_authors(authors: List[Author]) -> None:
-    """
-    Counts and sets rates for authors.
-
-    Args:
-        autors: list of authors
-
-    """
-    for auth in authors:
-        auth.set_rate(count_author_rate(auth))
-
-
-def sort_authors(authors: List[Author]):
-    """
-    Sorts authors by rate
-    """
-    return sorted(authors, key=lambda author: author.get_rate(), reverse=True)

@@ -4,7 +4,6 @@ from typing import List
 from src.greedy.data_loader import load_data
 from src.greedy.data_preparation import get_initial_publications, normalize_data
 from src.greedy.greedy import run_algorithm
-from src.greedy.tools import get_list_of_files_from_dir
 from src.greedy.output_converter import (
     convert_dictionary_to_vector,
     convert_publications_to_dictionary,
@@ -19,13 +18,16 @@ from src.greedy.settings import (
     LIST_VARIABLES,
     NESTED_LIST_VARIABLES,
     PUBLICATIONS_NUM,
-    STRING_LIST_VARIIABLES,
     RESULTS_DIR,
+    STRING_LIST_VARIIABLES,
     THRESHOLDS_SUFFIX,
 )
+from src.greedy.tools import get_list_of_files_from_dir
 
 
-def get_result_path(input_path: str, mode: int, idx: int, test_try: int, results_dir: str) -> str:
+def get_result_path(
+    input_path: str, mode: int, idx: int, test_try: int, results_dir: str
+) -> str:
     path = input_path.split("/")
     filename = path[len(path) - 1].split(("-"))[0]
     single_test_dir = os.path.join(results_dir, filename)
@@ -56,7 +58,7 @@ def test_algorithm(
     test_try: int,
     data: dict,
     filepath: str,
-    results_dir: str
+    results_dir: str,
 ):
     """
     0 - empty publications list
@@ -108,7 +110,9 @@ if __name__ == "__main__":
             val = test_algorithm(2, 2, 28, 0, source_data.copy(), filepath, RESULTS_DIR)
             print(f"2: 1/1: {val}")
             for i in range(25):
-                val = test_algorithm(3, 2, 28, i, source_data.copy(), filepath, RESULTS_DIR)
+                val = test_algorithm(
+                    3, 2, 28, i, source_data.copy(), filepath, RESULTS_DIR
+                )
                 print(f"3: {i + 1}/25: {val}")
             print()
             print()

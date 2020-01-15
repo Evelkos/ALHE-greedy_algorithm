@@ -1,21 +1,18 @@
-import pytest
+from typing import List
 
-from src.greedy.tools import compare_lists
 from src.greedy.author import Author
 from src.greedy.data_preparation import (
-    count_author_rate,
     create_publications_list,
     normalize_data,
     prepare_authors,
-    prepare_publications,
     prepare_authors_and_their_publications,
-    set_rate_for_authors,
-    sort_authors,
+    prepare_publications,
 )
 from src.greedy.publication import Publication
 from src.greedy.settings import (
     AUTHOR_ID,
     CONTRIBUTION,
+    INITIAL_PUBS,
     IS_EMPLOYEE,
     IS_IN_N,
     IS_MONOGRAPH,
@@ -24,13 +21,7 @@ from src.greedy.settings import (
     PUBLICATION_ID,
     PUBLICATION_POINTS_FOR_AUTHOR,
 )
-from src.tests.test_author import (
-    count_publications_rates_sum,
-    create_complex_publications_list,
-    prepare_basic_test_data,
-    prepare_complex_test_data,
-)
-from typing import List
+from src.greedy.tools import compare_lists
 
 
 def prepare_test_authors(data: dict):
@@ -82,32 +73,6 @@ def test_normalize_data():
     assert normalize_data(data) == result
 
 
-def test_count_author_rate():
-    author, publications, pubs_rates_sum = prepare_basic_test_data()
-    assert count_author_rate(author) == pubs_rates_sum / len(publications)
-
-
-def test_count_author_rate_with_publications_reloaded():
-    author, _, _ = prepare_basic_test_data()
-    publications = create_complex_publications_list()
-
-    prev_pubs = author.to_considerate
-    author.load_publications(publications)
-    author.create_publications_ranking()
-
-    pubs_rates_sum = count_publications_rates_sum(author.to_considerate)
-
-    assert not prev_pubs == author.to_considerate
-    assert count_author_rate(author) == pubs_rates_sum / len(author.to_considerate)
-
-
-def test_count_author_rate_with_zero_publications_to_considerate():
-    author, _, _ = prepare_basic_test_data()
-    author.to_considerate = []
-
-    assert count_author_rate(author) == 0
-
-
 def test_prepare_authors():
     data = prepare_test_authors_data()
     authors = prepare_test_authors(data)
@@ -135,11 +100,11 @@ def test_prepare_publications():
         IS_MONOGRAPH: mons,
         PUBLICATION_POINTS_FOR_AUTHOR: [points for _ in range(len(authors))],
         PUBLICATION_CONTRIB_FOR_AUTHOR: [ctbs for _ in range(len(authors))],
+        INITIAL_PUBS: [[0 for _ in range(len(ids))] for _ in range(len(authors))],
     }
 
     for author in test_authors:
         author.load_publications(prepare_test_publications(ids, mons, points, ctbs))
-        author.create_publications_ranking()
 
     prepare_publications(authors, data)
     assert authors == test_authors
@@ -156,6 +121,7 @@ def test_prepare_authors_and_their_publications_with_multiple_authors():
         IS_PHD_STUDENT: [0, 1, 1],
         CONTRIBUTION: [1.0, 0.5, 1.0],
         IS_IN_N: [1, 1, 1],
+        INITIAL_PUBS: [[0 for _ in range(3)] for _ in range(3)],
     }
 
     authors = prepare_authors_and_their_publications(data)
@@ -184,6 +150,7 @@ def test_prepare_authors_and_their_publications_with_one_pub_with_too_big_contri
         IS_PHD_STUDENT: [0],
         CONTRIBUTION: [1.0],
         IS_IN_N: [1],
+        INITIAL_PUBS: [[0 for _ in range(3)] for _ in range(3)],
     }
 
     authors = prepare_authors_and_their_publications(data)
@@ -192,20 +159,9 @@ def test_prepare_authors_and_their_publications_with_one_pub_with_too_big_contri
     test_authors = prepare_test_authors(data)
     test_publications = [
         Publication("0", True, 69, 96.0),
-        Publication("2", False, 1, 1.0)
+        Publication("2", False, 1, 1.0),
     ]
     test_authors[0].publications = test_publications
     test_authors[0].to_considerate = [test_publications[1]]
-    
+
     assert authors == test_authors
-
-
-def test_set_rate_for_authors():
-    authors = prepare_test_authors(prepare_test_authors_data())
-    for idx, author in enumerate(authors, 0):
-        author.set_rate(idx)
-
-    sorted_authors = sort_authors(authors)
-    authors.reverse()
-
-    assert sorted_authors == authors

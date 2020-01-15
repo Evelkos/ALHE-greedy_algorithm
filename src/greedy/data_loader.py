@@ -4,11 +4,6 @@ from typing import Any, List
 
 
 # TODO: change pattern
-def get_int_pattern() -> str:
-    return r"(\d+)"
-
-
-# TODO: change pattern
 def get_list_of_floats_pattern() -> str:
     return r"(\[(\d+|, |\d+\.\d+)+\])"
 

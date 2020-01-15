@@ -1,5 +1,5 @@
-from typing import Any, List
 import os
+from typing import Any, List
 
 
 def compare_lists(list1: List[Any], list2: List[Any]):

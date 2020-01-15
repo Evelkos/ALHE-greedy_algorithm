@@ -1,13 +1,12 @@
 from typing import List
 
+from src.greedy.publication import Publication
 from src.greedy.settings import (
     AUTHOR_ID,
     EMPLOYEES_NUM,
     PUBLICATION_ID,
     PUBLICATIONS_NUM,
 )
-
-from src.greedy.publication import Publication
 
 
 def get_empty_vector(rows: int, columns: int) -> List[List[int]]:

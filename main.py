@@ -7,6 +7,8 @@ from src.greedy.greedy import run_algorithm
 from src.greedy.output_converter import (
     convert_dictionary_to_vector,
     convert_publications_to_dictionary,
+    get_result_path,
+    save_results
 )
 from src.greedy.publication import Publication
 from src.greedy.settings import (
@@ -23,32 +25,6 @@ from src.greedy.settings import (
     THRESHOLDS_SUFFIX,
 )
 from src.greedy.tools import get_list_of_files_from_dir
-
-
-def get_result_path(
-    input_path: str, mode: int, idx: int, test_try: int, results_dir: str
-) -> str:
-    path = input_path.split("/")
-    filename = path[len(path) - 1].split(("-"))[0]
-    single_test_dir = os.path.join(results_dir, filename)
-
-    if not os.path.exists(single_test_dir):
-        os.mkdir(single_test_dir)
-
-    return os.path.join(single_test_dir, f"{filename}_{mode}_{idx}_{test_try}.txt")
-
-
-def save_results(path: str, data: dir, goal: float, vec: List[List[int]]) -> None:
-    with open(path, "w") as f:
-        tmp_goals = data["threshold_goal_values"]
-        for threshold in tmp_goals:
-            f.write(f"{THRESHOLDS_SUFFIX}{threshold} = {tmp_goals[threshold]};")
-            f.write("\n")
-        f.write("\n")
-        f.write(f"final_goal_function = {goal};")
-        f.write("\n")
-        f.write("\n")
-        f.write(f"vector = {vec};")
 
 
 def test_algorithm(
@@ -72,8 +48,10 @@ def test_algorithm(
         data["goal_calculations_num"] = 0
         data["threshold_goal_values"] = {}
         data["best_result"] = {"res_pubs": [], "goal_fun": 0}
+        
         heuristic_len = int(data[PUBLICATIONS_NUM] * HEURISTIC_RESULT_PUBS_LEN)
         publications, goal_function = run_algorithm(data, heuristic_len)
+
         result_publications = convert_publications_to_dictionary(publications)
         result_vector = convert_dictionary_to_vector(result_publications, data)
         max_goal = max(max_goal, goal_function)
@@ -83,8 +61,8 @@ def test_algorithm(
 
 
 if __name__ == "__main__":
-    files = get_list_of_files_from_dir(DIRPATH, ".txt")
-    # files = [FILEPATH]
+    # files = get_list_of_files_from_dir(DIRPATH, ".txt")
+    files = [FILEPATH]
 
     for filepath in files:
         print(filepath)
@@ -109,7 +87,7 @@ if __name__ == "__main__":
             print(f"1: 1/1: {val}")
             val = test_algorithm(2, 2, 28, 0, source_data.copy(), filepath, RESULTS_DIR)
             print(f"2: 1/1: {val}")
-            for i in range(25):
+            for i in range(0, 25):
                 val = test_algorithm(
                     3, 2, 28, i, source_data.copy(), filepath, RESULTS_DIR
                 )

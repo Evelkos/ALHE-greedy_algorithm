@@ -45,10 +45,10 @@ FILEPATH = "data/filozofia-input.txt"
 DIRPATH = "data"
 
 # Path to the directory where results will be stored
-RESULTS_DIR = "data/results"
+RESULTS_DIR = "data/results/test"
 
 # Path to the directory where results will be stored
-PLOT_DATA = "data/results/ALHE_wszystkie_limity_sortowanie"
+PLOT_DATA = "data/results/ALHE_ograniczone_limity"
 
 # Suffix of thresholds saved in results file
 THRESHOLDS_SUFFIX = "threshold_"

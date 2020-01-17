@@ -1,11 +1,12 @@
 from typing import List
-
+import os
 from src.greedy.publication import Publication
 from src.greedy.settings import (
     AUTHOR_ID,
     EMPLOYEES_NUM,
     PUBLICATION_ID,
     PUBLICATIONS_NUM,
+    THRESHOLDS_SUFFIX,
 )
 
 
@@ -92,3 +93,29 @@ def convert_publications_to_dictionary(publications: List[Publication]) -> dir:
         else:
             result_publications[pub.get_id()].append(pub.get_author().get_id())
     return result_publications
+
+
+def get_result_path(
+    input_path: str, mode: int, idx: int, test_try: int, results_dir: str
+) -> str:
+    path = input_path.split("/")
+    filename = path[len(path) - 1].split(("-"))[0]
+    single_test_dir = os.path.join(results_dir, filename)
+
+    if not os.path.exists(single_test_dir):
+        os.mkdir(single_test_dir)
+
+    return os.path.join(single_test_dir, f"{filename}_{mode}_{idx}_{test_try}.txt")
+
+
+def save_results(path: str, data: dir, goal: float, vec: List[List[int]]) -> None:
+    with open(path, "w") as f:
+        tmp_goals = data["threshold_goal_values"]
+        for threshold in tmp_goals:
+            f.write(f"{THRESHOLDS_SUFFIX}{threshold} = {tmp_goals[threshold]};")
+            f.write("\n")
+        f.write("\n")
+        f.write(f"final_goal_function = {goal};")
+        f.write("\n")
+        f.write("\n")
+        f.write(f"vector = {vec};")

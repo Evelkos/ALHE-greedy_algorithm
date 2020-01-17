@@ -207,9 +207,7 @@ def choose_publications_to_publish(
             if heur_pubs > 0:
                 heu_without_pub += get_points_from_pub(pubs, idx + heur_pubs)
 
-            if tmp_goal_fun + heu_pub > goal_fun + heu_without_pub and pub.get_author().accept_publication(
-                pub
-            ):
+            if tmp_goal_fun + heu_pub > goal_fun + heu_without_pub and pub.get_author().accept_publication(pub):
                 goal_fun = tmp_goal_fun
                 heuristic_value = heu_pub
                 heur_pubs -= 1
